@@ -1,3 +1,4 @@
+
 ## Synopsis
 
 This projects contains the development of DEC, an imperative
@@ -8,23 +9,39 @@ DEC has been designed as an intermediate language to support the
 translation to C of the Pip protokernel
 (https://raw.githubusercontent.com/2xs/pipcore).
 
-* 4Pip
+## Version
 
-The artifacts in the 4Pip folder are part of the Pip toolchain.
+DEC 1.0 language specification, implemented in Coq 8.6.
 
-* Lang
+## Coq modules (src/langspec)
 
-The artifacts in the Lang folder are part of the general development
-of the DEC language.
+* EnvLib.v : auxiliary library
 
+* ModTyp.v : module type
+
+* BaseMod.v : base module
+
+* LangSpec.v : language specification including
+
+  + syntax definition
+
+  + static semantics
+
+  + small-step dynamic semantics
+
+## Building the project
+
+* run './make2file' to create the Makefile, then 'make' to build the project
+
+* run './makedoc' to generate the coqdoc html documentation
 
 ## Contributors
 
 The DEC development team is
 
 * Paolo Torrini <paolo.torrini@univ-lille1.fr>
-* David Nowak <david.nowak@univ-lille1.fr>
 
+* David Nowak <david.nowak@univ-lille1.fr>
 
 ## Licence
 
