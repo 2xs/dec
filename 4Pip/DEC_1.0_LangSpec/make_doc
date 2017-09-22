@@ -1,0 +1,7 @@
+#!/bin/bash
+
+coqdoc --html src/*.v -d ./coqdoc
+
+echo ""
+echo "html files generated in ./coqdoc"
+echo ""
