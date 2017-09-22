@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir -p coqdoc
+
+coqdoc --html src/langspec/*.v -d ./coqdoc
+
+echo ""
+echo "html files generated in ./coqdoc"
+echo ""

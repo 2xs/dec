@@ -1,0 +1,4 @@
+#!/bin/bash
+
+coq_makefile -f _CoqProject src/langspec/*.v -o Makefile
+
