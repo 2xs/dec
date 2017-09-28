@@ -1,0 +1,1237 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+
+\newcommand{\escmathcom}[3]{ \newcommand{#1}[#2]{\mbox{#3}}}
+
+\escmathcom{\mcal}{1}{$\mathcal{#1}$}
+\escmathcom{\msf}{1}{$\mathsf{#1}$}
+\escmathcom{\SEP}{0}{$ \ \triangleright \ $}
+\escmathcom{\LANG}{0}{$ \langle \ $}
+\escmathcom{\RANG}{0}{$ \ \rangle $}
+
+
+\begin{document}
+
+\title{DEC 1.0 specification}
+
+\author{Paolo Torrini, David Nowak \\
+  \small 2XS Team, CRIStAL-Universit{\'e} Lille 1 \\
+   \texttt{https://www.cristal.univ-lille.fr} }
+
+\date{\vspace{-2ex}}
+
+\maketitle  
+
+\section{Introduction}
+
+DEC is an imperative functional language with bounded recursion and
+generic effects deeply embedded in Coq. It has been designed as a
+small intermediate language to support translation from monadic
+Gallina code to C. It captures the expressiveness of the monadic code
+used in the implementation of the Pip protokernel
+(\texttt{https://github.com/2xs/pipcore}). Being defined in terms of
+abstract datatypes, it allows for syntactic manipulation to be
+implemented and verified directly in Coq. In particular, this is the
+case for its translations to Coq representations of C, such as
+CompCert C (\texttt{http://compcert.inria.fr}).
+
+The DEC specification includes a definition of the syntax, definitions
+of the static semantics, and a definition of the dynamic semantics,
+which is stateful and based on a small-step transition relation, in
+the style of SOS. Syntactic categories and semantic relations are
+mainly defined in terms of inductive datatypes.
+
+Essentially, DEC provides the expressiveness of a fragment of C, when
+we restrict to C expressions and call by value. It allows for
+sequencing (corresponding to C comma expressions), local variables,
+conditional branching, internal and external function calls. As in C,
+functions cannot be passed as arguments by value. Passing by reference
+is not modelled. Internal functions are essentially primitive
+recursive ones, defined by a bounded \emph{iterate}-style
+construct. Any Gallina function can be imported as an external one,
+and semantically treated as a generic effect with respect to the DEC
+state.
+
+Relying on Coq modules, the definition of DEC is parametric in the
+type of the mutable state and in the type of identifiers. These
+parameters are specified in the module type \emph{ModTyp.v}. With
+respect to Pip, the concrete module \emph{BaseMod.v} provides an
+instantiation of these parameters consistent with the current output
+of the Digger tool (\texttt{https://github.com/2xs/digger}).
+
+DEC types include primitive value types, which are specified by an
+admissibility type class over Gallina types, and function types based
+on primitive types. DEC programs do not bear type annotation, save for
+formal parameters in functions.
+
+DEC normal forms include data values and functions. DEC distinguishes
+between data variables and function variables, while relying on a
+single name space for identifiers. Correspondingly, DEC semantics
+distinguishes between data environments and function environments, and
+similarly for typing environments (or contexts). Environments are
+generally implemented as association lists, functionally interpreted
+as partial maps.
+
+DEC values are defined by lifting Gallina terms and further hiding
+their Gallina types, using dependent product. We call quasi-values the
+head normal forms based on data, which simply include values and data
+variables. Analogously, we call quasi-functions the head normal forms
+based on functions, including functions and function variables.
+
+Internal function definition includes local function variables, formal
+parameters with their types, function bodies for zero and non-zero
+fuel, an identifier as recursive call name (which can also be used as
+function name), and a natural value that represents fuel (i.e. the
+bound). DEC functions are structurally closed terms, in the sense that
+each occurrence of an identifier in their bodies is bound either as a
+formal parameter or as a local variable. In internal function calls,
+concrete parameters are given as a lifted list of expressions.
+
+The lifting constructors in the definition of expressions are
+\msf{Val}, which lifts values, and \msf{Return} which lifts
+quasi-values and is additionally tagged for external, non-semantic
+reasons. \msf{bindN} is the sequencing constructor. The constructors
+for local variables are \msf{bindS}, which allows for let-style
+binding of identifiers to expressions, and \msf{bindMS}, which allows
+for multiple binding of identifiers to normal forms. \msf{ifThenElse}
+is the conditional branching constructor. The constructors for
+internal and external function calls are \msf{apply} and
+\msf{modify}, respectively. Moreover, \msf{Var} and \msf{FVar} are
+used to lift identifiers to the corresponding head-normal forms, and
+similarly \msf{QV} and \msf{QF} to lift normal forms. \msf{FunZ}
+and \msf{FunS} are the recursive function constructors. The
+constructor \msf{PS} lifts expression lists to parameters.
+
+In the intended use of DEC, function definitions are known statically
+from the function environment. That is, the \msf{bindMS} constructor
+and the \msf{QF} lifting of functions to quasi-functions are only
+meant to be used in the processing of programs. Moreover, the first
+argument of \msf{ifThenElse} is meant to be a lifted quasi-value.
+
+Notice that functions, quasi-functions, expressions, and parameters
+are defined by mutual induction. The typing relation for each
+syntactic category is also defined inductively, modulo the
+well-typedness of the environments each object depends on. Usually,
+the definition of a typing relation is parametric in the associated
+typing contexts. Granted the intended use of DEC, we find it
+convenient to define a more expressive, algorithmic typing relation,
+which depends also on the function environment. In this way, the
+definition of the typing relation for functions can be defined
+inductively on the fuel.  This makes it possible to obtain a stronger
+inductive principle for the mutually inductive datatype. Under the
+restrictions we mentioned, the algorithmic typing relation we have
+implemented is equivalent to the more usual, declarative one.
+
+The dynamic semantics is specified in the style of structural
+operational semantics (SOS) using a small-step transition relation on
+configurations that for each category include a program term in that
+category and a state of the mutable store. In general, the transition
+relation depends on value environments and function environments. The
+order of evaluation is fixed to left-to-right.
+
+
+
+\section{Syntax}
+
+
+\subsection{State type}
+
+\begin{gather}
+  \msf{W} \ : \ \msf{Type}
+\end{gather}
+
+
+\subsection{Identifier type}
+
+\begin{gather}
+  \msf{Id} \ : \ \msf{Type}
+\end{gather}
+
+
+\subsection{External function record}
+
+\begin{gather}
+\begin{array}{lll}  
+  \mbox{\it xf} \ : & (\ \msf{XFun} \ (\mbox{\it InpT} \ : \ \msf{Type}) \
+           (\mbox{\it OutT} \ : \ \msf{Type}) \ : \
+  \msf{Type} \ := \\
+  & \quad \{ \msf{b\_mod} \ : \ \msf{W} \to \mbox{\it InpT} \to (\msf{W} \ * \ \mbox{\it OutT}) \} \ )
+\end{array}  
+\end{gather}
+
+
+
+\subsection{Data value types}
+
+\begin{gather}
+t \ : \ \msf{VTyp} \ \ := \ \msf{vtyp} \ \msf{Type}
+\end{gather}
+
+
+
+
+\subsection{Parameter types}
+
+
+\begin{gather}
+  ts \ : \ \msf{list} \ \msf{VTyp}
+\end{gather}
+
+
+\begin{gather}
+  pt \ : \ ( \ \msf{PTyp} \ := \ \msf{PT} \ (\msf{list} \ \msf{VTyp}) \ )
+\end{gather}
+
+
+\subsection{Identifiers}
+
+\begin{gather}
+  x \ : \ \msf{Id} 
+\end{gather}
+
+
+\subsection{Data typing contexts}
+
+\begin{gather}
+  \begin{array}{lll}
+\Gamma \ : \ ( \ \msf{ValTC} \quad := \quad \msf{list} \ (\msf{Id} \ *
+\ \msf{VTyp}) \ ) \quad <: \quad  \msf{Id} \to \msf{option} \ \msf{VTyp}
+\end{array}
+\end{gather}  
+
+
+
+\subsection{Function types}
+
+
+\begin{gather}
+(\tau \ : \ \msf{FTyp}) \ := \ \msf{ValTC} \Rightarrow \msf{VTyp}
+\end{gather}
+
+
+
+\subsection{Function typing contexts}
+
+\begin{gather}
+  \begin{array}{lll}
+    \Phi \ : \ ( \ \msf{FunTC} \quad := \quad \msf{list} \ (\msf{Id} \ *
+\ \msf{FTyp}) \ ) \quad <: \quad  \msf{Id} \to \msf{option} \ \msf{FTyp}
+\end{array}
+\end{gather}  
+
+
+
+\subsection{Data values}
+
+\begin{gather}
+  (v \ : \ \msf{Value}) \ := \ \msf{cst} \ (T : \msf{Type}) \ T 
+\end{gather}
+
+
+
+\subsection{Quasi-values}
+
+\begin{gather}
+  (qv \ : \ \msf{QValue}) \ := \ \msf{Var} \ \msf{Id} \ \mid \ 
+                               \msf{QV} \ \msf{Value} 
+\end{gather}
+
+
+
+
+\subsection{Data value environments}
+
+\begin{gather}
+\begin{array}{lll}  
+  \rho \ : \ ( \ \msf{ValEnv} \quad := \quad \msf{list} \ (\msf{Id} \ *
+  \ \msf{Value}) \ ) \quad <: \quad  \msf{Id} \to \msf{option} \ \msf{Value}
+\end{array}
+\end{gather}  
+
+
+
+
+\subsection{Functions}
+
+\begin{gather}
+\begin{array}{lll}  
+  (f \ : \ \msf{Fun}) \ := & \msf{FC} \
+  (\mbox{\it local\_function\_definitions} \ : \ \msf{FunEnv}) \\
+  & \quad (\mbox{\it formal\_parameters} \ : \ \msf{ValTC}) \\
+  & \quad (\mbox{\it function\_body\_zero\_case} \ : \ \msf{Exp}) \\
+  & \quad (\mbox{\it function\_body\_succ\_case} \ : \ \msf{Exp}) \\
+  & \quad (\mbox{\it recursive\_call\_name} \ : \ \msf{Id}) \\
+  & \quad (\mbox{\it recursion\_bound} \ : \ \msf{nat}
+\end{array}  
+\end{gather}
+
+
+\subsection{Quasi-functions}
+
+\begin{gather}
+  (\mbox{\it qf} \ : \ \msf{QFun}) \ := \
+  \msf{FVar} \ \msf{Id} \ \mid \ \msf{QF}
+  \ \msf{Fun}
+\end{gather}
+
+
+\subsection{Function environments}
+
+\begin{gather}
+\begin{array}{lll}  
+  \phi \ : \ ( \ \msf{FunEnv} \ := \ ( \msf{Id} \ * \ \msf{Fun}) \ )
+   \quad <: \quad  \msf{Id} \to \msf{option} \ \msf{Fun}
+\end{array}
+\end{gather}  
+
+
+\subsection{Return tags}
+
+\begin{gather}
+  (\mbox{\it tg} \ : \ \msf{Tag}) \ := \ \msf{LL} \ \mid \ \msf{RR} 
+\end{gather}
+
+
+
+\subsection{Expressions}
+
+\begin{gather}
+\begin{array}{lll}
+  (e \ : \ \msf{Exp}) & := & 
+%
+   \msf{val} \ \msf{Value} \\
+%
+ & \mid & \msf{return} \ \msf{Tag} \ \msf{QValue} \\
+%
+  & \mid & \msf{bindN} \ \msf{Exp} \ \msf{Exp} \\
+%
+  & \mid & \msf{bindS} \ \msf{Id} \ \msf{Exp} \ \msf{Exp} \\
+% 
+  & \mid & \msf{bindMS} \ \msf{FunEnv} \ \msf{ValEnv} \ \msf{Exp} \\
+%
+  & \mid & \msf{ifThenElse} \ \msf{Exp} \ \msf{Exp} \ \msf{Exp} \\
+%
+  & \mid & \msf{apply} \ \msf{QFun} \ \msf{Prms} \\ 
+%    
+  & \mid & \msf{modify} \ (\msf{XFun} \ \msf{Type} \ \msf{Type}) \
+   \msf{QValue}
+\end{array}
+\end{gather}
+
+
+
+\subsection{Parameters}
+
+
+\begin{gather}
+  \mbox{\it vs} \ : \ \msf{list} \ \msf{Value}
+\end{gather}
+
+
+\begin{gather}
+  \mbox{\it es} \ : \ \msf{list} \ \msf{Exp}
+\end{gather}
+
+
+\begin{gather}
+  (ps \ : \ \msf{Prms}) \ := \ \msf{PS} \ (\msf{list} \ \msf{Exp})
+\end{gather}
+
+
+
+
+\subsection{Programs}
+
+\begin{gather}
+\begin{array}{lll}
+  (\pi \ : \ \msf{Prog}) \ := \
+%
+  \msf{prog} \ \msf{Exp} 
+%
+   \mid \msf{define} \ \msf{Id} \ \msf{Fun} \ \msf{Prog} 
+%
+\end{array}
+\end{gather}
+
+
+
+\subsection{Configurations}
+
+\begin{gather}
+   (C \ : \ \msf{SynCat}) \ := \ \msf{QValue} \mid \msf{QFun} \mid
+  \msf{Prms} \mid \msf{Exp} \mid \msf{Prog}
+\end{gather}  
+
+
+
+\begin{gather}
+\begin{array}{llll}
+    \msf{Config} \ C \ := \
+    \LANG & \msf{state} : \msf{W} \ & \triangleright &
+ \msf{program\_term} : C \quad \RANG
+\end{array}
+\end{gather}  
+
+
+
+\subsection{Static sequents}
+
+\begin{gather}
+  \begin{array}{lll}
+ \msf{Typing\_sequent} & := 
+%
+ \quad \msf{ValTC} \ \vdash \ \msf{QValue} \ :: \ \msf{VTyp} \\
+%
+& \mid \quad \ \vdash \ \msf{Value} \ :: \ \msf{VTyp} \\
+%
+& \mid \quad \ \vdash \ \msf{Fun} \ :: \ \msf{FTyp} \\
+%
+& \mid \quad \ \vdash \ \msf{option} \ \msf{Value} \ :: \ \msf{option}
+ \ \msf{VTyp} \\
+%
+& \mid \quad \ \vdash \ \msf{option} \ \msf{Fun} \ :: \ \msf{option}
+ \ \msf{FTyp} \\
+%
+& \mid \quad \ \vdash \ \msf{ValEnv} \ :: \ \msf{ValTC} \\
+ %
+& \mid \quad \ \vdash \ \msf{FunEnv} \ :: \ \msf{FunTC} 
+\end{array}
+\end{gather}  
+
+
+\begin{gather}
+  \begin{array}{lll}
+ \msf{AlgTyping\_sequent} & := 
+%
+\ \msf{FunTC}; \msf{FunEnv} \ \vdash \ \msf{Prog} \ :: \ \msf{VTyp} \\
+%
+& \mid \quad \msf{FunTC}; \msf{FunEnv}; \msf{ValTC} \ \vdash
+\ \msf{Exp} \ :: \ \msf{VTyp} \\
+%
+ & \mid \quad \msf{FunTC}; \msf{FunEnv}; \msf{ValTC} \ \vdash
+\ \msf{Prms} \ :: \ \msf{PTyp} \\
+%
+& \mid \quad \msf{FunTC}; \msf{FunEnv} \ \vdash \ \msf{QFun} \ ::
+\ \msf{FTyp}
+\end{array}
+\end{gather}  
+
+
+\begin{gather}
+  \begin{array}{lll}
+ \msf{DecTyping\_sequent} & := 
+%
+\ \msf{FunTC} \ \vdash \ \msf{Prog} \ :: \ \msf{VTyp} \\
+%
+& \mid \quad \msf{FunTC}; \msf{ValTC} \ \vdash \ \msf{Exp} \ ::
+\ \msf{VTyp} \\
+%
+ & \mid \quad \msf{FunTC}; \msf{ValTC} \ \vdash \ \msf{Prms} \ ::
+ \ \msf{PTyp} \\
+%
+& \mid \quad \msf{FunTC} \ \vdash \ \msf{QFun} \ :: \ \msf{FTyp} 
+\end{array}
+\end{gather}  
+
+
+
+\subsection{Dynamic sequents}
+
+
+\begin{gather}
+ \begin{array}{lll}
+   \msf{Step\_sequent} & := \
+   \msf{FunEnv} \ \vdash \ \msf{Config} \ \msf{Prog}
+ \longrightarrow \msf{Config} \ \msf{Prog} \\
+ %
+ & \quad \quad \msf{FunEnv}; \msf{ValEnv} \ \vdash \ \msf{Config} \ \msf{Exp}
+ \longrightarrow \msf{Config} \ \msf{Exp} \\
+ %
+ & \quad \quad \msf{FunEnv}; \msf{ValEnv} \ \vdash \ \msf{Config} \ \msf{Prms}
+ \longrightarrow \msf{Config} \ \msf{Prms} \\
+ %
+ & \quad \quad \msf{ValEnv} \ \vdash \ \msf{Config} \ \msf{QValue}
+ \longrightarrow \msf{Config} \ \msf{QValue} \\
+%
+ & \quad \quad \msf{FunEnv} \ \vdash \ \msf{Config} \ \msf{QFun}
+ \longrightarrow \msf{Config} \ \msf{QFun}
+\end{array}
+\end{gather}  
+
+
+
+
+
+\subsection{Relating value lists and lifted value lists}
+
+\begin{gather}
+\vdash \msf{values} \ : \ \msf{list} \ \msf{Exp} \to \msf{list}
+\ \msf{Value} \to \msf{Prop}
+\end{gather}
+
+\begin{gather}
+\frac{ \vdash \mbox{\it es} = \msf{map} \ \msf{val} \ \mbox{\it vs} }  
+{\vdash \msf{values} \ \mbox{\it es} \ \mbox{\it vs}}
+\end{gather}
+
+
+\subsection{Typing context conversion to type lists}
+
+\begin{gather}
+\vdash \msf{tc2pt} \ : \ \msf{ValTC} \to \msf{PTyp} 
+\end{gather}
+
+
+
+\subsection{Value environment creation}
+
+\begin{gather}
+\vdash \msf{mkValEnv} \ : \ \msf{ValTC} \to \msf{list} \ \msf{Value} \ \to
+ \msf{ValEnv}
+\end{gather}
+
+
+
+\section{Static semantics}
+
+
+\subsection{Data values}
+
+\begin{gather}
+\frac{ \vdash T \ : \ \msf{Type} \ \qquad \ \vdash n \ : \ T}
+ { \vdash \msf{cst} \ T \ n \ :: \ \msf{vtyp} \ T }
+\end{gather}
+
+
+
+\subsection{Option-lifted normal forms}
+
+\begin{gather}
+\frac{ }
+ { \vdash \msf{None} \ :: \ \msf{None} }
+\end{gather}
+
+
+\begin{gather}
+\frac{ \vdash v \ :: \ t}
+ { \vdash \msf{Some} \ v \ :: \ \msf{Some} \ t }
+\end{gather}
+
+
+\begin{gather}
+\frac{ \vdash f \ :: \ \tau}
+ { \vdash \msf{Some} \ f \ :: \ \msf{Some} \ \tau }
+\end{gather}
+
+
+
+
+\subsection{Environments}
+
+
+\begin{gather}
+  \frac{ \bigwedge ( x: \msf{Id} ) \ ( \ \vdash \rho \ x \ :: \ \Gamma
+    \ x \ ) } { \vdash \rho \ :: \ \Gamma}
+\end{gather}
+
+\begin{gather}
+  \frac{ \bigwedge ( x: \msf{Id} ) \ ( \ \vdash \phi \ x \ :: \ \Phi
+    \ x \ ) } { \vdash \phi \ :: \ \Phi }
+\end{gather}
+
+
+
+
+
+\subsection{Quasi-values}
+
+\begin{gather}
+\frac{ \vdash \Gamma \ x \ = \ \msf{Some} \ t}{ \Gamma \vdash
+  \msf{Var} \ x \ :: \ t}
+\end{gather}
+
+\begin{gather}
+\frac{ \vdash v \ :: \ t}{ \Gamma \vdash \msf{QV} \ v \ :: \ t}
+\end{gather}
+
+
+
+
+
+\section{Algorithmic static semantics}
+
+
+
+\subsection{Expression lists}
+
+\begin{gather}
+\frac{ } { \Phi; \phi; \Gamma \vdash \msf{nil} \ :: \ \msf{nil} }
+\end{gather}
+
+
+\begin{gather}
+\frac{ \Phi; \phi; \Gamma \vdash e \ :: \ t \qquad \Phi; \phi; \Gamma
+  \vdash \mbox{\it es} \ :: \ ts } { \Phi; \phi; \Gamma \vdash
+  \msf{cons} \ e \ \mbox{\it es} \ :: \ \msf{cons} \ t \ ts }
+\end{gather}
+
+
+
+
+\subsection{Parameters}
+
+
+\begin{gather}
+  \frac{\begin{array}{lll}
+    \Phi; \phi; \Gamma \vdash \mbox{\it es} \ :: \ ts 
+    \end{array}
+  }{ \Phi; \phi; \Gamma \vdash \msf{PS} \ \mbox{\it es} \ ::
+    \ \msf{PT} \ ts }
+\end{gather}
+
+
+
+\subsection{Functions}
+
+
+\begin{gather}
+  \frac{
+\begin{array}{lll}  
+  \vdash \phi \ :: \ \Phi  \\
+  \Phi; \phi; \Gamma \vdash e_0 \ :: \ t \\ 
+\end{array}  
+  }{ \vdash \msf{FC} \ \phi \ \Gamma \ e_0 \ e_1 \ x \ 0 \ :: \ \Gamma
+    \Rightarrow t}
+\end{gather}
+
+\begin{gather}
+  \frac{
+\begin{array}{lll}  
+  \vdash \phi \ :: \ \Phi \qquad \vdash n \ : \ \msf{nat} \\ \vdash
+  \msf{FC} \ \phi \ \Gamma \ e_0 \ e_1 \ x \ n \ :: \ \Gamma
+  \Rightarrow t \\ (x, \ \Gamma \Rightarrow t) / \Phi; (x, \ \msf{FC}
+  \ \phi \ \Gamma \ e_0 \ e_1 \ x \ n) / \phi; \Gamma \vdash e_1 \ ::
+  \ t \\
+\end{array}  
+  }{ \vdash \msf{FC} \ \phi \ \Gamma \ e_0 \ e_1 \ x \ (\msf{S} \ n)
+    \ :: \ \Gamma \Rightarrow t}
+\end{gather}
+
+
+
+
+\subsection{Quasi-functions}
+
+
+\begin{gather}
+\frac{\vdash \phi \ :: \ \Phi \qquad \vdash \Phi \ x \ = \ \tau}{\Phi;
+  \phi \vdash \msf{FVar} \ x \ :: \ \tau}
+\end{gather}
+
+\begin{gather}
+\frac{ \vdash f \ :: \ \tau}{ \Phi; \phi \vdash \msf{QF} \ f \ :: \ \tau}
+\end{gather}
+
+
+
+\subsection{Expressions}
+
+\begin{gather}
+\frac{ \vdash v \ :: \ t}{\Phi; \phi; \Gamma \vdash \msf{val} \ v ::
+  \ t}
+\end{gather}
+
+\begin{gather}
+  \frac{ \Gamma \vdash qv \ :: \ t \qquad \vdash \mbox{\it tg} \ :
+    \ \msf{Tag} } {\Phi; \phi; \Gamma \vdash \msf{return} \ \mbox{\it
+      tg} \ qv \ :: \ t}
+\end{gather}
+
+\begin{gather}
+ \frac{\Phi; \phi; \Gamma \vdash e_1 \ :: \ t_1 \qquad \Phi; \phi;
+   \Gamma \vdash e_2 \ :: \ t_2} {\Phi; \phi; \Gamma \vdash
+   \msf{bindN} \ e_1 \ e_2 \ :: \ t_2 }
+\end{gather}
+
+\begin{gather}
+ \frac{\Phi; \phi; \Gamma \vdash e_1 \ :: \ t_1 \qquad \Phi; \phi; (x,
+   \ t_1) / \Gamma \vdash e_2 \ :: \ t_2} {\Phi; \phi; \Gamma \vdash
+   \msf{bindS} \ x \ e_1 \ e_2 \ :: \ t_2 }
+\end{gather}
+
+\begin{gather}
+  \frac{ \vdash \phi' \ :: \ \Phi' \qquad \vdash \rho \ :: \ \Gamma'
+    \qquad \Phi' / \Phi; \phi' / \phi; \Gamma' / \Gamma \vdash e \ ::
+    \ t} {\Phi; \phi; \Gamma \vdash \msf{bindMS} \ \phi' \ \rho \ e
+    \ :: \ t }
+\end{gather}
+
+\begin{gather}
+  \frac{\Phi; \phi; \Gamma \vdash e_1 \ :: \ \msf{vtyp} \ \msf{bool}
+    \qquad \Phi; \phi; \Gamma \vdash e_2 \ :: \ t \qquad \Phi; \phi;
+    \Gamma \vdash e_3 \ :: \ t } {\Phi; \phi; \Gamma \vdash
+    \msf{ifThenElse} \ e_1 \ e_2 \ e_3 \ :: \ t }
+\end{gather}
+
+\begin{gather}
+\frac{ \Phi; \phi \vdash \msf{\it qf} \ :: \ \Gamma' \Rightarrow t
+  \qquad \Phi; \phi; \Gamma \vdash ps \ :: \ \msf{tc2pt}
+  \ \Gamma'}{\Phi; \phi; \Gamma \vdash \ \msf{apply} \ \msf{\it qf}
+  \ ps \ :: \ t}
+\end{gather}
+
+\begin{gather}
+  \frac{ \vdash \mbox{\it xf} \ : \ \msf{XFun} \ T_1 \ T_2 \ \qquad
+    \ \Gamma \vdash qv \ :: \ \msf{vtyp} \ T_1 } {\Phi; \phi; \Gamma
+    \vdash \msf{modify} \ \mbox{\it xf} \ qv \ :: \ \msf{vtyp} \ T_2}
+\end{gather}
+
+
+\subsection{Programs}
+
+\begin{gather}
+ \frac{\vdash \phi \ :: \ \Phi \qquad \Phi; \phi \vdash e \ :: \ t}
+      {\Phi; \phi \vdash \msf{prog} \ e \ :: \ t }
+\end{gather}
+
+
+\begin{gather}
+ \frac{\vdash \phi \ :: \ \Phi \qquad \vdash f \ :: \ \tau \qquad (x,
+   \ \tau) / \Phi; (x, \ f)/\phi \vdash \pi \ :: \ t} {\Phi; \phi
+   \vdash \msf{define} \ x \ f \ \pi \ :: \ t }
+\end{gather}
+
+
+
+
+\section{Dynamic semantics}
+
+\subsection{Var}
+
+\begin{gather}
+  \frac{ \vdash \rho \ x \ = \ \msf{Some} \ v}{ \rho \vdash \LANG w
+    \SEP \msf{Var} \ x \RANG \longrightarrow \LANG w \SEP \msf{QV} \ v
+    \RANG }
+\end{gather}
+
+
+
+\subsection{FVar}
+
+
+\begin{gather}
+  \frac{ \vdash \phi \ x \ = \ \msf{Some} \ f}{ \phi \vdash \LANG w
+    \SEP \msf{FVar} \ x \RANG \longrightarrow \LANG w \SEP \msf{QF}
+    \ f \RANG }
+\end{gather}
+
+
+\subsection{return}
+
+\begin{gather}
+  \frac{}{ \phi; \rho \vdash \LANG w \SEP \msf{return} \ \mbox{\it tg}
+    \ v \RANG \longrightarrow \LANG w \SEP \msf{val} \ \mbox{\it tg}
+    \ v \RANG }
+\end{gather}
+
+
+\begin{gather}
+  \frac{ \rho \vdash \LANG w \SEP q \RANG \longrightarrow \LANG w'
+    \SEP q' \RANG } { \phi; \rho \vdash \LANG w \SEP \msf{return}
+    \ \mbox{\it tg} \ q \RANG \longrightarrow \LANG w' \SEP
+    \msf{return} \ \mbox{\it tg} \ q' \RANG }
+\end{gather}
+
+
+
+
+\subsection{bindN}
+
+\begin{gather}
+  \frac{}{ \phi; \rho \vdash \LANG w \SEP \msf{bindN} \ (\msf{val}
+    \ v) \ e \RANG \longrightarrow \LANG w \SEP e \RANG }
+\end{gather}
+
+
+\begin{gather}
+  \frac{ \phi; \rho \vdash \LANG w \SEP e_1 \RANG \longrightarrow
+    \LANG w' \SEP e'_1 \RANG }{ \phi; \rho \vdash \LANG w \SEP
+    \msf{bindN} \ e_1 \ e_2 \RANG \longrightarrow \LANG w' \SEP
+    \msf{bindN} \ e'_1 \ e_2 \RANG }
+\end{gather}
+
+
+
+
+\subsection{bindS}
+
+\begin{gather}
+  \frac{ }{
+\begin{array}{lll}
+    \phi; \rho \vdash \LANG w \SEP \msf{bindS} \ x \ (\msf{val} \ v)
+    \ e \RANG \longrightarrow \\ \qquad \qquad \LANG w \SEP
+    \msf{bindMS} \ \emptyset \ (x, \ v) \ e \RANG
+\end{array} }
+\end{gather}
+
+\begin{gather}
+  \frac{ \phi; \rho \vdash \LANG w \SEP e_1 \RANG \longrightarrow
+    \LANG w' \SEP e'_1 \RANG }{ \phi; \rho \vdash \LANG w \SEP
+    \msf{bindS} \ x \ e_1 \ e_2 \RANG \longrightarrow \LANG w' \SEP
+    \msf{bindS} \ x \ e'_1 \ e_2 \RANG }
+\end{gather}
+
+
+\subsection{bindMS}
+
+\begin{gather}
+  \frac{}{ \phi; \rho \vdash \LANG w \SEP \msf{bindMS} \ \_ \ \_
+    \ (\msf{val} \ v) \RANG \longrightarrow \LANG w \SEP \msf{val} \ v
+    \RANG }
+\end{gather}
+
+\begin{gather}
+  \frac{ \begin{array}{ll} \phi' / \phi; \rho' / \rho \vdash \LANG w
+      \SEP e \RANG \longrightarrow \LANG w \SEP e' \RANG \end{array} }
+       { \begin{array}{ll} \phi; \rho \vdash \LANG w \SEP \msf{bindMS}
+           \ \phi' \ \rho' \ e \RANG \longrightarrow \LANG w \SEP
+           \msf{bindMS} \ \phi' \ \rho' \ e') \RANG \end{array} }
+\end{gather}
+
+
+
+\subsection{ifThenElse}
+
+\begin{gather}
+  \frac{}{ \phi; \rho \vdash \LANG w \SEP \msf{ifThenElse}
+    \ (\msf{val} \ (\msf{cst} \ \msf{bool} \ \msf{true})) \ e_1 \ e_2
+    \RANG \longrightarrow \LANG w \SEP e_1 \RANG }
+\end{gather}
+
+\begin{gather}
+  \frac{}{ \phi; \rho \vdash \LANG w \SEP \msf{ifThenElse}
+    \ (\msf{val} \ (\msf{cst} \ \msf{bool} \ \msf{false})) \ e_1 \ e_2
+    \RANG \longrightarrow \LANG w \SEP e_2 \RANG }
+\end{gather}
+
+
+\begin{gather}
+  \frac{ \phi; \rho \vdash \LANG w \SEP e_1 \RANG \longrightarrow
+    \LANG w' \SEP e'_1 \RANG }{ \phi; \rho \vdash \LANG w \SEP
+    \msf{ifThenElse} \ e_1 \ e_2 \ e_3 \RANG \longrightarrow \LANG w'
+    \SEP \msf{ifThenElse} \ e'_1 \ e_2 \ e_3 \RANG }
+\end{gather}
+
+
+
+
+\subsection{apply}
+
+\begin{gather}
+  \frac{ \vdash \msf{values} \ \mbox{\it es} \ \mbox{\it vs}
+  }{ \begin{array}{ll} \phi; \rho \vdash \LANG w \SEP \msf{apply}
+      \ (\msf{fun} \ \phi \ \Gamma \ e_0 \ e_1 \ x \ 0) \ (\msf{PS}
+      \ \mbox{\it es}) \RANG \longrightarrow \\ \qquad \qquad \qquad
+      \LANG w \SEP \msf{bindMS} \ \phi \ (\msf{mkValEnv} \ \Gamma
+      \ \mbox{\it vs}) \ e_0 \RANG \end{array}}
+\end{gather}
+
+\begin{gather}
+  \frac{ \vdash \msf{values} \ \mbox{\it es} \ \mbox{\it vs}
+  }{ \begin{array}{ll} \phi; \rho \vdash \LANG w \SEP \msf{apply}
+      \ (\msf{fun} \ \phi \ \Gamma \ e_0 \ e_1 \ x \ (\msf{S} \ n))
+      \ (\msf{PS} \ \mbox{\it es}) \RANG \longrightarrow \\ \quad
+      \LANG w \SEP \msf{bindMS} \ ((x, \ \msf{FC} \ \phi \ \Gamma
+      \ e_0 \ e_1 \ x \ n) / \phi) \ (\msf{mkValEnv} \ \Gamma
+      \ \mbox{\it vs}) \ e_1 \RANG \end{array}}
+\end{gather}
+
+\begin{gather}
+  \frac{ \phi; \rho \vdash \LANG w \SEP ps \RANG \longrightarrow \LANG
+    w' \SEP ps' \RANG }{ \phi; \rho \vdash \LANG w \SEP \msf{apply}
+    \ f \ ps \RANG \longrightarrow \LANG w' \SEP \msf{apply} \ f \ ps'
+    \RANG }
+\end{gather}
+
+\begin{gather}
+  \frac{ \phi \vdash \LANG w \SEP \msf{\it qf} \RANG \longrightarrow
+    \LANG w' \SEP \msf{\it qf'} \RANG }{ \phi; \rho \vdash \LANG w
+    \SEP \msf{apply} \ \msf{\it qf} \ ps \RANG \longrightarrow \LANG
+    w' \SEP \msf{apply} \ \msf{\it qf'} \ ps \RANG }
+\end{gather}
+
+
+
+\subsection{modify}
+
+\begin{gather}
+  \frac{ \vdash \mbox{\it xf} \ : \ \msf{XFun} \ T_1 \ T_2 \qquad
+    \vdash \mbox{\it xf}.\msf{b\_mod} \ w \ n \ = \ (w',n') } { \phi;
+    \rho \vdash \LANG w \SEP \msf{modify} \ \mbox{\it xf} \ (\msf{cst}
+    \ T_1 \ n) \RANG \longrightarrow \LANG w' \SEP \msf{Val}
+    \ (\msf{cst} \ T_2 \ n') \RANG }
+\end{gather}
+
+\begin{gather}
+  \frac{ \rho \vdash \LANG w \SEP qv \RANG \longrightarrow \LANG w'
+    \SEP qv' \RANG }{ \phi; \rho \vdash \LANG w \SEP \msf{modify} \ qv
+    \RANG \longrightarrow \LANG w' \SEP \msf{modify} \ \mbox{\it xf}
+    \ qv' \RANG }
+\end{gather}
+
+
+
+
+
+\subsection{parameters}
+
+
+\begin{gather}
+\frac{\begin{array}{lll}
+    \vdash \msf{values} \ \mbox{\it es}_1  \ \_ \\
+%
+    \vdash ps \ = \ \msf{PS} \ (\msf{append} \ \mbox{\it es}_1
+    \ (\msf{cons} \ e \ \mbox{\it es}_2)) \\
+%
+    \vdash ps' \ = \ \msf{PS} \ (\msf{append} \ \mbox{\it es}_1
+    \ (\msf{cons} \ e' \ \mbox{\it es}_2)) \\
+%
+    \phi; \rho
+    \vdash \LANG w \SEP
+    e \RANG \longrightarrow \LANG w' \SEP e' \RANG
+        \end{array}}
+%
+  {\phi; \rho
+    \vdash \LANG w \SEP
+    ps \RANG \longrightarrow \LANG w' \SEP ps' \RANG }
+\end{gather}
+
+
+
+\subsection{prog}
+
+\begin{gather}
+  \frac{ \phi; \rho \vdash \LANG w \SEP e \RANG
+    \longrightarrow \LANG w' \SEP e' \RANG }{ \phi; \rho \vdash
+    \LANG w \SEP \msf{prog} \ e \RANG \longrightarrow \LANG
+    w' \SEP \msf{prog} \ e' \RANG }
+\end{gather}
+
+
+
+\subsection{define}
+
+\begin{gather}
+  \frac{}{ \phi \vdash \LANG w \SEP \msf{define} \ \_ \ \_
+    \ (\msf{prog} \ (\msf{val} \ v)) \RANG \longrightarrow \LANG w
+    \SEP \msf{prog} \ (\msf{val} \ v) \RANG }
+\end{gather}
+
+\begin{gather}
+  \frac{ (x, \ f) / \phi \vdash \LANG w \SEP \pi \RANG \longrightarrow
+    \LANG w' \SEP \pi' \RANG }{ \phi \vdash \LANG w \SEP \msf{define}
+    \ x \ f \ \pi \RANG \longrightarrow \LANG w' \SEP \msf{define} \ x
+    \ f \ \pi' \RANG }
+\end{gather}
+
+
+
+
+\section{Declarative static semantics }
+
+
+
+
+\subsection{Expression lists}
+
+\begin{gather}
+\frac{ }
+ { \Phi; \Gamma \vdash \msf{nil} \ :: \ \msf{nil} }
+\end{gather}
+
+
+\begin{gather}
+\frac{ \Phi; \Gamma \vdash e \ :: \ t \qquad \Phi; \Gamma \vdash
+  \mbox{\it es} \ :: \ ts } { \Phi; \Gamma \vdash \msf{cons} \ e
+  \ \mbox{\it es} \ :: \ \msf{cons} \ t \ ts }
+\end{gather}
+
+
+
+
+\subsection{Parameters}
+
+
+\begin{gather}
+  \frac{\begin{array}{lll}
+    \Phi; \Gamma \vdash \mbox{\it es} \ :: \ ts 
+    \end{array}
+  }{ \Phi; \Gamma \vdash \msf{PS} \ \mbox{\it es} \ :: \ \msf{PT} \ ts
+  }
+\end{gather}
+
+
+
+
+\subsection{Functions}
+
+
+\begin{gather}
+  \frac{
+\begin{array}{lll}  
+  \vdash \phi \ :: \ \Phi \qquad \vdash n \ : \ \msf{nat} \\
+  \Phi; \Gamma \vdash e_0 \ :: \ t \\
+  (x, \ \Gamma \Rightarrow t) / \Phi; \Gamma \vdash e_1 \ :: \ t \\  
+\end{array}  
+  }{ \vdash \msf{FC} \ \phi \ \Gamma \ e_0 \ e_1 \ x \ n \ :: \ \Gamma
+    \Rightarrow t}
+\end{gather}
+
+
+
+
+\subsection{Quasi-functions}
+
+
+\begin{gather}
+\frac{ \vdash \Phi \ x \ = \ \msf{Some} \ \tau}{\Phi \vdash \msf{FVar}
+  \ x \ :: \ \tau}
+\end{gather}
+
+\begin{gather}
+\frac{ \vdash f \ :: \ \tau}{ \Phi \vdash \msf{QF} \ f \ :: \ \tau}
+\end{gather}
+
+
+
+\subsection{Expressions}
+
+\begin{gather}
+\frac{ \vdash v \ :: \ t}{\Phi; \Gamma \vdash \msf{val} \ v :: \ t}
+\end{gather}
+
+\begin{gather}
+  \frac{ \Gamma \vdash qv \ :: \ t \qquad \vdash \mbox{\it tg} \ :
+    \ \msf{Tag} } {\Phi; \Gamma \vdash \msf{return} \ \mbox{\it tg}
+    \ qv \ :: \ t}
+\end{gather}
+
+\begin{gather}
+ \frac{\Phi; \Gamma \vdash e_1 \ :: \ t_1 \qquad \Phi; \Gamma \vdash
+   e_2 \ :: \ t_2} {\Phi; \Gamma \vdash \msf{bindN} \ e_1 \ e_2 \ ::
+   \ t_2 }
+\end{gather}
+
+\begin{gather}
+ \frac{\Phi; \Gamma \vdash e_1 \ :: \ t_1 \qquad \Phi; (x, \ t_1) /
+   \Gamma \vdash e_2 \ :: \ t_2} {\Phi; \Gamma \vdash \msf{bindS} \ x
+   \ e_1 \ e_2 \ :: \ t_2 }
+\end{gather}
+
+\begin{gather}
+  \frac{ \vdash \phi \ :: \ \Phi' \qquad \vdash \rho \ :: \ \Gamma'
+    \qquad \Phi' / \Phi; \Gamma' / \Gamma \vdash e \ :: \ t} {\Phi;
+    \Gamma \vdash \msf{bindMS} \ \phi \ \rho \ e \ :: \ t }
+\end{gather}
+
+\begin{gather}
+  \frac{\Phi; \Gamma \vdash e_1 \ :: \ \msf{vtyp} \ \msf{bool} \qquad
+    \Phi; \Gamma \vdash e_2 \ :: \ t \qquad \Phi; \Gamma \vdash e_3
+    \ :: \ t } {\Phi; \Gamma \vdash \msf{ifThenElse} \ e_1 \ e_2 \ e_3
+    \ :: \ t }
+\end{gather}
+
+\begin{gather}
+\frac{ \Phi \vdash \msf{\it qf} \ :: \ \Gamma' \Rightarrow t \qquad
+  \Phi; \Gamma \vdash ps \ :: \ \msf{tc2pt} \ \Gamma'}{\Phi; \Gamma
+  \vdash \ \msf{apply} \ \msf{\it qf} \ ps \ :: \ t}
+\end{gather}
+
+\begin{gather}
+  \frac{ \vdash \mbox{\it xf} \ : \ \msf{XFun} \ T_1 \ T_2 \ \qquad
+    \ \Gamma \vdash qv \ :: \ \msf{vtyp} \ T_1 } {\Phi; \Gamma \vdash
+    \msf{modify} \ \mbox{\it xf} \ qv \ :: \ \msf{vtyp} \ T_2}
+\end{gather}
+
+
+
+
+\subsection{Programs}
+
+\begin{gather}
+ \frac{\Phi \vdash e \ :: \ t} {\Phi \vdash
+   \msf{prog} \ e \ :: \ t }
+\end{gather}
+
+
+\begin{gather}
+ \frac{ \vdash f \ :: \ \tau \qquad (x, \ \tau) / \Phi \vdash \pi \ ::
+   \ t} {\Phi \vdash \msf{define} \ x \ f \ \pi \ :: \ t }
+\end{gather}
+
+
+\section{Reflective translation (outline)}
+
+We give an informal specification of the reflective translation to the
+Gallina fragment used in the executable model of Pip. We focus on the
+most interesting case -- expression translation ($\Theta_e$). \emph{TC}
+stands for the typing context information, and \emph{E} for
+environment information (moreover including information about the
+external monadic functions). We informally denote by \emph{\msf{ext}
+  \ x \ e \ TC} as the extension of \emph{TC} by associating the
+identifier $x$ with the type of expression $e$, and by \emph{\msf{ext}
+  \ x \ e \ E} as the extension of \emph{E} by associating the
+identifier $x$ with the value obtained from $e$. We leave unspecified
+the translation of types ($\Theta_t$), values ($\Theta_v$), quasi-values
+($\Theta_{qv}$) and quasi-functions ($\Theta_{qf})$, which are not
+problematic, the translation of parameters ($\Theta_{ps}$), which
+essentially maps expression translation on the underlying list, and
+the translation of functions ($\Theta_f$), which boils down to the
+translation of the function bodies.
+
+The term $\Theta_e \ e \ TC$ is meant to have type which depends on the
+type of $e$ and on $TC$. The term $\Theta_e \ e \ TC$ is meant to have
+type which depends solely on the type $t$ of $e$ -- indeed, type
+$\Theta_t \ t$.
+
+
+\begin{gather}
+\begin{array}{lll}  
+\Theta_e \ (\msf{val} \ v, \_, \_) & = \ \msf{ret} \ (\Theta_v \ v) \\
+%
+\Theta_e \ (\msf{return} \ \_ \ qv) \ \_ \ E & = \ \msf{ret}
+\ (\Theta_{qv} \ qv \ E) \\
+%
+\Theta_e \ (\msf{bindN} \ e_1 \ e_2) \ TC \ E & = \ \msf{bind}
+\ (\Theta_e \ e_1 \ TC \ E) \ (\Theta_e \ e_2 \ TC \ E) \\
+%
+\Theta_e \ (\msf{bindS} \ x \ e_1 \ e_2) \ TC \ E & = \ \msf{bind}
+\ (\Theta_e \ e_1 \ TC \ E) \\ & \qquad (\Theta_e \ e_2 \ (\msf{ext} \ x
+\ e_1 \ TC) \ (\msf{ext} \ x \ e_1 \ E)) \\
+%
+\Theta_e \ (\msf{ifThenElse} \\ \quad (\msf{return} \ qv) \ e_1 \ e_2)
+\ TC \ E & = \ \msf{if} \ (\Theta_{qv} \ qv \ E) \ \msf{then}
+\ \ (\Theta_e \ e_1 \ TC \ E) \\ & \qquad \qquad \qquad \qquad
+\msf{else} \ (\Theta_e \ e_2 \ TC \ E) \\
+%
+\Theta_e \ (\msf{apply} \ \mbox{\it qf} \ ps) \ TC \ E & =
+\ \msf{bind} \ (\Theta_{ps} \ ps \ TC \ E) \ (\Theta_{\it{qf}}
+\ \mbox{\it qf} \ TC \ E) \\
+%
+\Theta_e \ (\msf{modify} \ \mbox{\it xf} \ qv) \ TC \ E & = 
+\ (\Theta_{\it{xf}} \ \mbox{\it xf} \ TC \ E) \ (\Theta_{qv} \ qv \ E)
+\end{array}
+\end{gather}
+
+
+\section{Translation to C (outline)}
+
+
+We give an informal specification of the translation to C, again
+focusing on expressions. Essentially, the translation returns
+recursively a C expression paired with a list of C variable
+declarations. Typing information is used pervasively, but omitted in
+this schematic presentation. DEC identifiers are translated to C
+variables. Sequencing is translated to comma expressions ($,_c$),
+local variables to comma expressions with assignment ($=_c$),
+conditionals to conditional expressions ($?:$), and function calls to
+function calls ($\_ \ \_$). Function translation boils down to
+translating the function bodies and lifting them to statements. The
+top-level function environment is translated by mapping function
+translation on the list.
+
+
+\begin{gather}
+\begin{array}{lll}  
+\Xi_e \ (\msf{val} \ v) & = \ (\Xi_v \ v, \ \msf{nil}) \\
+%
+\Xi_e \ (\msf{return} \ \_ \ v) & = \ (\Xi_{qv} \ v, \ \msf{nil}) \\
+%
+\Xi_e \ (\msf{bindN} \ e_1 \ e_2) & = \ \msf{let} \ (ee_1, dd_1) \ :=
+\ (\Xi_e \ e_1) \\ & \qquad \quad (ee_2, dd_2) \ := \ (\Xi_e \ e_2) \\
+& \qquad \msf{in} \
+((ee_1 \ ,_c \ ee_2), \ \msf{concat} \ dd_1 \ dd_2) \\
+%
+\Xi_e \ (\msf{bindS} \ x \ e_1 \ e_2) & = \ \msf{let} \ (ee_1, dd_1)
+\ := \ (\Xi_e \ e_1) \\ & \qquad \quad (ee_2, dd_2) \ := \ (\Xi_e
+\ e_2) \\ & \qquad \qquad i \ := \ \Xi_i \ x \\ & \qquad
+\msf{in} \ ((i \ =_c \ ee_1 \ ,_c \ ee_2), \\ & \qquad \qquad \msf{ext}
+\ i \ (\Xi_t \ e_1) \ (\msf{concat} \ dd_1 \ dd_2)) \\
+%
+\Xi_e \ (\msf{ifThenElse} \\ \qquad (\msf{return} \ qv) \ e_1 \ e_2) &
+= \ \msf{let} \ (ee_1, dd_1) \ := \ (\Xi_e \ e_1) \\ & \qquad \quad
+(ee_2, dd_2) \ := \ (\Xi_e \ e_2) \\ & \qquad \msf{in} \ ((\Xi_{qv}
+\ qv) \ ? \ ee_1 \ : \ ee_2, \\ & \qquad \qquad \msf{concat} \ dd_1
+\ dd_2) \\
+%
+\Xi_e \ (\msf{apply} \ \mbox{\it qf} \ ps) & = \ \msf{let} \ (pps, dd)
+\ = \ (\Xi_e \ ps) \\ & \qquad \msf{in} \ ((\Xi_{\it{qf}} \ \mbox{\it
+  qf}) \ pps, \ dd) \\
+%
+\Xi_e \ (\msf{modify} \ \mbox{\it xf} \ qv) & = \ ((\Xi_{\it{xf}}
+\ \mbox{\it xf}) \ (\Xi_{qv} \ qv), \ \msf{nil})
+\end{array}
+\end{gather}
+
+
+
+We can refine the above translation function to one which targets
+CompCert C (\texttt{http://compcert.inria.fr/compcert-C.html}). We can
+then rely on the CompCert representation of C expressions as a
+datatype (in \emph{Csyntax.expr}). Here the translation returns
+recursively a C expression paired with its type, which is needed by
+CompCert, and a list of C global declarations. The latter results in a
+list of CompCert type $(\msf{ident} \ * \ \msf{globdef} \ \msf{fundef}
+\ \msf{type})$, given the translation of DEC identifiers to C
+identifiers. As before, sequencing is translated to comma expressions
+(\msf{Ecomma}), local variables to comma expressions with assignment
+(\msf{Eassign}), conditionals to conditional expressions
+(\msf{Econdition}), and function calls to function calls
+(\msf{Ecall}).
+
+
+\begin{gather}
+\begin{array}{lll}  
+\Psi_e \ (\msf{val} \ v) & = \ (\Psi_v \ v, \ \msf{nil}) \\
+%
+\Psi_e \ (\msf{return} \ \_ \ v) & = \ (\Psi_{qv} \ v, \ \msf{nil}) \\
+%
+\Psi_e \ (\msf{bindN} \ e_1 \ e_2) & = \ \msf{let} \ (ee_1, \ \_,
+\ dd_1) \ := \ (\Psi_e \ e_1) \\ & \qquad \quad (ee_2, \ ty, \ dd_2)
+\ := \ (\Psi_e \ e_2) \\ & \qquad \msf{in} \ ((\msf{Ecomma} \ ee_1
+\ ee_2 \ ty), \\ & \qquad \qquad ty, \ \msf{concat} \ dd_1 \ dd_2) \\
+%
+\Psi_e \ (\msf{bindS} \ x \ e_1 \ e_2) & = \ \msf{let} \ (ee_1, \ ty_1,
+\ dd_1) \ := \ (\Psi_e \ e_1) \\ & \qquad \quad (ee_2, \ ty_2, \ dd_2)
+\ := \ (\Psi_e \ e_2) \\ & \qquad \quad i \ := \ \Psi_i \ x \\ & \qquad
+\msf{in} \ (\msf{Ecomma} \ (\msf{Eassign} \ i \ ee_1 \ ty_1) \ ee_2
+\ ty_2, \\ & \qquad \qquad ty_2, \ \msf{cons} \ (i,\ ty_1)
+\ (\msf{concat} \ dd_1 \ dd_2)) \\
+%
+\Psi_e \ (\msf{ifThenElse} \\ \qquad  (\msf{return} \ qv) \
+ e_1 \ e_2) & =
+\ \msf{let} \ (vv, \ \msf{Tint} \ \msf{IBool} \ \_ \ \_) \ :=
+\ (\Psi_{qv} \ qv) \\ & \qquad \quad (ee_1, ty, \ dd_1) \ := \ (\Psi_e
+\ e_1) \\ & \qquad \quad (ee_2, \ ty, \ dd_2) \ := \ (\Psi_e \ e_2)
+\\ & \qquad \msf{in} \ (\msf{Econdition} \ vv \ ee_1 \ ee_2 \ ty,
+ \\ & \qquad \qquad ty, \ \msf{concat} \ dd_1 \ dd_2) \\
+%
+\Psi_e \ (\msf{apply} \ \mbox{\it qf} \ ps) & = \ \msf{let} \ (pps,
+\ tts, \ dd) \ := \ (\Psi_{ps} \ ps) \\ & \qquad \quad (\it{ff},
+\ \msf{Tfunction} \ tys \ ty \ \_) \ := \ (\Psi_{fs} \ qf) \\ & \qquad
+\msf{in} \ (\msf{Ecall} \ \it{ff} \ pps \ ty, \ ty, \ dd) \\
+%
+\Psi_e \ (\msf{modify} \ \mbox{\it xf} \ qv) & = \ \msf{let} \ tys
+\ := \ \msf{Tcons} \ tt \ \msf{Tnil} \\ & \qquad \quad (qqv, \ tts)
+\ := \ (\Psi_{qv} \ qv) \\ & \qquad \quad (\it{ff}, \ \msf{Tfunction}
+\ tys \ ty \ \_) \ := \ (\Psi_{\it{xf}} \ \mbox{\it xf}) \\ & \qquad
+\msf{in} \ (\msf{Ecall} \ \it{ff} \ qv \ ty, \ ty, \ \msf{nil})
+\end{array}
+\end{gather}
+
+
+
+\end{document}
+

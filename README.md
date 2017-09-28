@@ -7,7 +7,7 @@ embedded in Coq.
 
 DEC has been designed as an intermediate language to support the
 translation to C of the Pip protokernel
-(https://raw.githubusercontent.com/2xs/pipcore).
+(https://github.com/2xs/pipcore).
 
 ## Version
 
@@ -15,13 +15,13 @@ DEC 1.0 language specification, implemented in Coq 8.6.
 
 ## Coq modules (src/langspec)
 
-* EnvLib.v : auxiliary library
+* EnvLib.v: auxiliary library
 
-* ModTyp.v : module type
+* ModTyp.v: module type
 
-* BaseMod.v : base module
+* BaseMod.v: base module
 
-* LangSpec.v : language specification including
+* LangSpec.v: language specification including
 
   + syntax definition
 
@@ -33,7 +33,8 @@ DEC 1.0 language specification, implemented in Coq 8.6.
 
 * run './make2file' to create the Makefile, then 'make' to build the project
 
-* run './makedoc' to generate the coqdoc html documentation
+* run './makedoc' to generate the pdf documentation (in doc, requires
+  pdflatex) and the coqdoc html documentation (in coqdoc)
 
 ## Contributors
 

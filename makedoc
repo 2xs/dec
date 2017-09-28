@@ -1,9 +1,25 @@
 #!/bin/bash
 
+if hash pdflatex 2>/dev/null;
+then pdflatex -halt-on-error -output-directory=doc ./doc/DEC_spec.tex
+     echo ""
+     echo "generated pdf file in ./doc"
+     echo ""    
+else
+     echo ""
+     echo "need to install pdflatex"
+     echo ""
+fi
+
+rm -f ./doc/DEC_spec.aux
+rm -f ./doc/DEC_spec.log
+
 mkdir -p coqdoc
 
-coqdoc --html src/langspec/*.v -d ./coqdoc
-
-echo ""
-echo "html files generated in ./coqdoc"
-echo ""
+if [ -f src/langspec/LangSpec.vo ] ;
+then coqdoc --html src/langspec/*.v -d ./coqdoc
+     echo "generated html files in ./coqdoc"
+     echo ""
+else echo "need to run make first"
+     echo ""
+fi     
