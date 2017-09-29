@@ -9,8 +9,8 @@ Require Import DEC.AuxLib.
 Require Import DEC.ModTyp.
 
 (** * DEC 1.0 base module *)
-(** With respect to the current translation of Pip, this module is
-only used for the type of identifiers *)
+(** Defines concretely the type of identifiers and that of states. 
+    NOTE: currently used in the translation of Pip, though only for the type of the identifiers. *)
 
 Module BMod <: ModTyp.
 
@@ -28,8 +28,7 @@ Module BMod <: ModTyp.
   Definition IdEq := id_eq.
 
   
-(** States are natural numbers (just meant as a dummy here, as they
-   are not used in the current translation of Pip) *)  
+(** States are natural numbers (just meant as a dummy definition, as it is not used) *)  
 
   Definition W := nat.
 

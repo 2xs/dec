@@ -52,20 +52,20 @@ Instance BoolVT : ValTyp bool.
 
 (** Value types *)
 
-(** The type of value types *)
+(** - The type of value types *)
 
 Definition VTyp : Type := sig ValTyp.
 
-(** Smart value type constructor *)
+(** - Smart value type constructor *)
 
 Definition vtyp (T: Type) {VT: ValTyp T} : VTyp :=
     @exist Type ValTyp T VT.
 
-(** Extractor *)
+(** - Extractor *)
 
 Definition vtypExt (t: VTyp) : Type := proj1_sig t.
 
-(** Value type abbreviations *)
+(** - Value type abbreviations *)
 
 Definition Nat : VTyp := vtyp nat.
 
@@ -76,23 +76,23 @@ Definition Bool : VTyp := vtyp bool.
 
 (************************************************************************)
 
-(** Parameter types *)
+(** - Parameter types *)
 
 Inductive PTyp : Type := PT (ts: list VTyp).
 
-(** Value-typing contexts *)
+(** - Value typing contexts *)
 
 Definition valTC : Type := list (Id * VTyp).
 
-(** Function types *)
+(** - Function types *)
 
 Inductive FTyp : Type := FT (prs_type: valTC) (ret_type: VTyp).
 
-(** Function-typing contexts *)
+(** - Function typing contexts *)
 
 Definition funTC : Type := list (Id * FTyp).
 
-(** Extractors for function types *)
+(** - Extractors for function types *)
 
 Definition extParType (ft: FTyp) : valTC :=
   match ft with FT ps _ => ps end.
@@ -103,22 +103,22 @@ Definition extRetType (ft: FTyp) : VTyp :=
 
 (***************************************************************************)
 
-(**** Value expressions *)
+(** Value expressions *)
 
-(** The internal type of values, parametrised by Gallina types *)
+(** - The internal type of values, parametrised by Gallina types *)
 
 Inductive ValueI (T: Type) : Type := Cst (v: T).
 
-(** The external type of values, hiding Gallina types *)
+(** - The external type of values, hiding Gallina types *)
 
 Definition Value : Type := sigT ValueI.
 
-(** Smart value constructor *)
+(** - Smart value constructor *)
 
 Definition cst (T: Type) (v: T) : Value :=
            @existT Type ValueI T (Cst T v).
 
-(** eExtractors *)
+(** - Extractors *)
 
 Definition ValueI2T (T: Type) (v: ValueI T) : T :=
     match v with Cst _  x => x end.             
@@ -128,7 +128,7 @@ Definition cstExt (v: Value) : projT1 v := ValueI2T (projT1 v) (projT2 v).
 
 (***********************************************************************)
 
-(** Value environments *)
+(** - Value environments *)
 
 Definition valEnv : Type := list (Id * Value).
 
@@ -146,12 +146,15 @@ Inductive Tag : Type := LL | RR.
 
 (** Program terms *)
 
-Inductive Fun : (** Functions *)
+(** Syntactic categories defined by mutual induction: 
+    functions, quasi-functions, expressions, parameters *)
+
+Inductive Fun : (** - Functions *)
    Type := FC (fenv: Envr Id Fun) 
               (tenv: valTC) (e0 e1: Exp) (x: Id) (n: nat)
-with QFun : (** Quasi-functions *)
+with QFun : (** - Quasi-functions *)
    Type := FVar (x: Id) | QF (v: Fun)
-with Exp : (** Expressions *)
+with Exp : (** - Expressions *)
        Type :=
          | Val (v: Value)
          | Return (G: Tag) (q: QValue)
@@ -162,26 +165,30 @@ with Exp : (** Expressions *)
          | Apply (q: QFun) (ps: Prms) 
          | Modify (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
                   (XF: XFun T1 T2) (q: QValue)
-with Prms : (** Parameters *)
+with Prms : (** - Parameters *)
    Type := PS (es: list Exp).
-
-
-Inductive Prog : (** Top-level programs *)
-       Type := prog (e: Exp)
-             | define (x: Id) (f: Fun) (p: Prog).
 
 
 (** Function environments *)
 
 Definition funEnv : Type := Envr Id Fun.
 
-  
-(* Conversion from typing contexts to type lists *)
+
+(** Top-level programs *)
+
+Inductive Prog : Type := prog (e: Exp)
+             | define (x: Id) (f: Fun) (p: Prog).
+
+
+
+(** Auxiliary functions *)
+
+(** - Conversion from typing contexts to type lists *)
 
 Definition env2ptyp (m: valTC) : PTyp := PT (map snd m).
 
 
-(* Creation of value environments *)
+(** - Creation of value environments *)
 
 Definition mkVEnv (tenv: valTC) (vs: list Value) : valEnv :=
      interleave (map fst tenv) vs.
@@ -284,16 +291,16 @@ Definition EnvTyping : valEnv -> valTC -> Type :=
 
 (** Typing of program terms *)
 
-Inductive FunTyping : (** Bounded recursive functions *)
+Inductive FunTyping : (** - Bounded recursive functions *)
   Fun -> FTyp -> Type :=
-(** bound 0 *)  
+(** - with no fuel *)  
   | FunZ_Typing: forall (ftenv: funTC) (tenv: valTC)
                         (fenv: funEnv) 
                         (e0 e1: Exp) (x: Id) (t: VTyp),
       MatchEnvsT FunTyping fenv ftenv -> 
       ExpTyping ftenv tenv fenv e0 t -> 
       FunTyping (FC fenv tenv e0 e1 x 0) (FT tenv t)
-(** bound successor *)                
+(** - with some fuel *)                
   | FunS_Typing: forall (ftenv: funTC) (tenv: valTC)
                         (fenv: funEnv) 
             (e0 e1: Exp) (x: Id) (n: nat) (t: VTyp),
@@ -303,37 +310,37 @@ Inductive FunTyping : (** Bounded recursive functions *)
       ExpTyping ftenv' tenv fenv' e1 t -> 
       FunTyping (FC fenv tenv e0 e1 x n) (FT tenv t) ->
       FunTyping (FC fenv tenv e0 e1 x (S n)) (FT tenv t)
-with QFunTyping : (** Quasi-functions *)
+with QFunTyping : (** - Quasi-functions *)
        funTC -> funEnv -> QFun -> FTyp -> Type :=
-(** lifting of a function *)       
+(** - lifting of a function *)       
   | QF_Typing: forall (ftenv: funTC) (fenv: funEnv) (f: Fun) (ft: FTyp),
       FunTyping f ft ->
       QFunTyping ftenv fenv (QF f) ft
-(** lifting of a function variable *)                 
+(** - lifting of a function variable *)                 
   | FVar_Typing: forall (ftenv: funTC) (fenv: funEnv)
                        (x: Id) (f: Fun) (ft: FTyp),
       MatchEnvs2BT FunTyping x f ft fenv ftenv ->  
       QFunTyping ftenv fenv (FVar x) ft
-with ExpTyping : (** expressions *)
+with ExpTyping : (** Expressions *)
        funTC -> valTC -> funEnv -> Exp -> VTyp -> Type :=
-(** lifting of values *)                        
+(** - lifting of values *)                        
   | Val_Typing : forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv) 
                         (v: Value) (t: VTyp), 
                        ValueTyping v t -> 
                        ExpTyping ftenv tenv fenv (Val v) t
-(** tagged lifting of quasi-values *)                               
+(** - tagged lifting of quasi-values *)                               
   | Return_Typing : forall (G: Tag)
                            (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
                            (q: QValue) (t: VTyp),
                        QValueTyping tenv q t ->  
                        ExpTyping ftenv tenv fenv (Return G q) t
-(** sequencing *)                                 
+(** - sequencing *)                                 
   | BindN_Typing : forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
                           (e1 e2: Exp) (t1 t2: VTyp), 
                        ExpTyping ftenv tenv fenv e1 t1 ->
                        ExpTyping ftenv tenv fenv e2 t2 ->
                        ExpTyping ftenv tenv fenv (BindN e1 e2) t2
-(** let-style binding *)
+(** - let-style binding of identifiers *)
   | BindS_Typing : forall (ftenv: funTC) (tenv: valTC) 
                           (fenv: funEnv) (x: Id) 
                           (e1 e2: Exp) (t1 t2: VTyp), 
@@ -341,7 +348,7 @@ with ExpTyping : (** expressions *)
                        ExpTyping ftenv tenv fenv e1 t1 ->
                        ExpTyping ftenv tenv' fenv e2 t2 ->
                        ExpTyping ftenv tenv fenv (BindS x e1 e2) t2
-(** binding with local environments *)                                 
+(** - binding by local environments *)                                 
   | BindMS_Typing : forall (ftenv ftenvP ftenv': funTC)
                            (tenv tenvP tenv': valTC)
                            (fenv fenvP fenv': funEnv) (envP: valEnv) 
@@ -354,14 +361,14 @@ with ExpTyping : (** expressions *)
                        fenv' = fenvP ++ fenv ->                         
                        ExpTyping ftenv' tenv' fenv' e t ->
                        ExpTyping ftenv tenv fenv (BindMS fenvP envP e) t
-(** conditional *)                                 
+(** - conditional expression *)                                 
   | IfThenElse_Typing : forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
                                (e1 e2 e3: Exp) (t: VTyp),
              ExpTyping ftenv tenv fenv e1 Bool ->
              ExpTyping ftenv tenv fenv e2 t ->
              ExpTyping ftenv tenv fenv e3 t ->
              ExpTyping ftenv tenv fenv (IfThenElse e1 e2 e3) t
-(** function application *)                                 
+(** - function application *)                                 
   | Apply_Typing : forall (ftenv: funTC) (tenv fps: valTC) (fenv: funEnv)
                           (q: QFun) (ps: Prms) (pt: PTyp) (t: VTyp),
               pt = PT (map snd fps) ->    
@@ -369,14 +376,14 @@ with ExpTyping : (** expressions *)
               QFunTyping ftenv fenv q (FT fps t) ->
               PrmsTyping ftenv tenv fenv ps pt ->
               ExpTyping ftenv tenv fenv (Apply q ps) t
-(** generic effect constructor *)       
+(** - call to a generic effect (external function) *)       
   | Modify_Typing : forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
                            (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
                            (XF: XFun T1 T2) (q: QValue),
                      QValueTyping tenv q (vtyp T1) ->  
                      ExpTyping ftenv tenv fenv
                                (Modify T1 T2 VT1 VT2 XF q) (vtyp T2)
-with PrmsTyping : (** Parameters *)
+with PrmsTyping : (** - Parameters *)
          funTC -> valTC -> funEnv -> Prms -> PTyp -> Type :=
 | PS_Typing: forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
                     (es: list Exp) (ts: list VTyp),
@@ -410,7 +417,7 @@ Inductive ProgTyping :
 
 (********************************************************************)
 
-(** value lists  in Prop *)
+(** Value lists in Prop *)
 
 Inductive isValue (e: Exp) : Prop :=
   IsValue : forall (v: Value), e = Val v -> isValue e.
@@ -422,7 +429,7 @@ Inductive isValueList2
   (els : list Exp) (vls : list Value) : Prop :=
 IsValueList2 :  els = map Val vls -> isValueList2 els vls.
 
-(** value lists in Type *)
+(** Value lists in Type *)
 
 Inductive isValueT (e: Exp) : Type :=
   IsValueT : forall (v: Value), e = Val v -> isValueT e.
@@ -440,14 +447,13 @@ IsValueList2T :  els = map Val vls -> isValueList2T els vls.
 (** * Dynamic semantics *)
 
 (** Inductively defined transition relations that define one-step
-computation on program-and-state configurations *)
+execution on program-and-state configurations *)
 
 (* *)
 
 (** Configurations *)
 
-Inductive AConfig (T: Type) : Type :=
-          Conf (state: W) (qq: T).
+Inductive AConfig (T: Type) : Type := Conf (state: W) (qq: T).
 
 
 (** Quasi-value computation *)
@@ -471,9 +477,9 @@ Inductive QFStep :
 
 (** Program term computation *)    
 
-Inductive EStep : (** Expressions *)
+Inductive EStep : (** - Expressions *)
   funEnv -> valEnv -> AConfig Exp -> AConfig Exp -> Type :=
-(** tagged q-value lifting *)
+(** - tagged q-value lifting *)
 | Return_EStep : forall (G: Tag)
                         (fenv: funEnv) (env: valEnv) (n: W) (v: Value),
     EStep fenv env (Conf Exp n (Return G (QV v)))
@@ -483,7 +489,7 @@ Inductive EStep : (** Expressions *)
                            (n n': W) (q q': QValue),
     QVStep env (Conf QValue n q) (Conf QValue n' q') ->
     EStep fenv env (Conf Exp n (Return G q)) (Conf Exp n' (Return G q'))
-(** sequencing *)
+(** - sequencing *)
 | BindN_EStep : forall (fenv: funEnv) (env: valEnv)
                        (n: W) (v: Value) (e: Exp),
     EStep fenv env (Conf Exp n (BindN (Val v) e)) (Conf Exp n e)
@@ -492,7 +498,7 @@ Inductive EStep : (** Expressions *)
     EStep fenv env (Conf Exp n e1) (Conf Exp n' e1') ->
     EStep fenv env (Conf Exp n (BindN e1 e2))
                         (Conf Exp n' (BindN e1' e2))
-(** let-style binding *)
+(** - let-style binding *)
 | BindS_EStep : forall (fenv: funEnv) (env: valEnv) 
                        (n: W) (x: Id) (v: Value) (e: Exp),          
     EStep fenv env (Conf Exp n (BindS x (Val v) e))
@@ -502,7 +508,7 @@ Inductive EStep : (** Expressions *)
     EStep fenv env (Conf Exp n e1) (Conf Exp n' e1') ->
     EStep fenv env (Conf Exp n (BindS x e1 e2))     
                         (Conf Exp n' (BindS x e1' e2))
-(** local environment binding *)
+(** - local environments *)
 | BindMS_EStep : forall (fenv fenv': funEnv) (env env': valEnv)    
                         (n: W) (v: Value),
     EStep fenv env (Conf Exp n (BindMS fenv' env' (Val v)))
@@ -515,7 +521,7 @@ Inductive EStep : (** Expressions *)
     EStep fenv' env' (Conf Exp n e) (Conf Exp n' e') ->
     EStep fenv env (Conf Exp n (BindMS fenvL envL e))
                    (Conf Exp n' (BindMS fenvL envL e'))
-(** conditional *)
+(** - conditional *)
 | IfThenElse_EStep1 :  forall (fenv: funEnv) (env: valEnv)
                               (n: W) (e1 e2: Exp),
      EStep fenv env (Conf Exp n (IfThenElse (Val (cst bool true)) e1 e2))
@@ -530,7 +536,7 @@ Inductive EStep : (** Expressions *)
      EStep fenv env (Conf Exp n e) (Conf Exp n' e') ->                       
      EStep fenv env (Conf Exp n (IfThenElse e e1 e2))
                          (Conf Exp n' (IfThenElse e' e1 e2))
-(** function application *)
+(** - function application *)
 | Apply_EStep0 : forall (fenv fenv': funEnv) (env env': valEnv)
                         (n: W) (e0 e1: Exp)
                         (es: list Exp) (vs: list Value)
@@ -566,7 +572,7 @@ Inductive EStep : (** Expressions *)
      QFStep fenv (Conf QFun n qf) (Conf QFun n' qf') ->
      EStep fenv env (Conf Exp n (Apply qf ps))
                          (Conf Exp n' (Apply qf' ps))
-(** modify *)
+(** - modify *)
 | Modify_EStep : forall (fenv: funEnv) (env: valEnv) (n: W)
                         (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
                         (XF: XFun T1 T2) (w: T1),
@@ -581,7 +587,7 @@ Inductive EStep : (** Expressions *)
     EStep fenv env (Conf Exp n (Modify T1 T2 VT1 VT2 XF q))
                         (Conf Exp n' (Modify T1 T2 VT1 VT2 XF q'))
 
-with PrmsStep : (** Parameters *)
+with PrmsStep : (** - Parameters *)
        funEnv -> valEnv -> AConfig Prms -> AConfig Prms -> Type :=
 | Prms_Cg_Step : forall (fenv: funEnv) (env: valEnv)
                    (n n': W) 

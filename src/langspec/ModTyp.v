@@ -37,7 +37,7 @@ Parameter Loc_PI : forall (T: Type) (p1 p2: ValTyp T), p1 = p2.
 
 Parameter BInit : W.
 
-(** The state type is an instance of the Pip state class *)
+(** W is the state type indeed, as it is an instance of the model state class *)
 
 Instance WP : PState W :=
 {
