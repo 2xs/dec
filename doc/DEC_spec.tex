@@ -97,12 +97,12 @@ for local variables are \msf{bindS}, which allows for let-style
 binding of identifiers to expressions, and \msf{bindMS}, which allows
 for multiple binding of identifiers to normal forms. \msf{ifThenElse}
 is the conditional branching constructor. The constructors for
-internal and external function calls are \msf{apply} and
-\msf{modify}, respectively. Moreover, \msf{Var} and \msf{FVar} are
-used to lift identifiers to the corresponding head-normal forms, and
-similarly \msf{QV} and \msf{QF} to lift normal forms. \msf{FunZ}
-and \msf{FunS} are the recursive function constructors. The
-constructor \msf{PS} lifts expression lists to parameters.
+internal and external function calls are \msf{apply} and \msf{modify},
+respectively. Moreover, \msf{Var} and \msf{FVar} are used to lift
+identifiers to the corresponding head-normal forms, and similarly
+\msf{QV} and \msf{QF} to lift normal forms. \msf{FC} is the recursive
+function constructor. The constructor \msf{PS} lifts expression lists
+to parameters.
 
 In the intended use of DEC, function definitions are known statically
 from the function environment. That is, the \msf{bindMS} constructor
