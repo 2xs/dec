@@ -1232,29 +1232,7 @@ Definition extractRunShallow (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
   let r := ExpEval ftenv tenv fenv e t k m1 env m2 s in
   (cstExt (projT1 (sigT_of_sigT2 r)), projT1 (projT3 r)).    
 
-Definition extractTyping (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
-           (e: Exp) (k: sigT (ExpTyping ftenv tenv fenv e)) : VTyp :=
-            projT1 k.  
 
-    
-Lemma extractTypingOpt  :
-  forall (e: Exp) (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv),
-    option (sigT (ExpTyping ftenv tenv fenv e)).
-  apply (Exp_mut (fun f => forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv), option (sigT (FunTyping f)))
-                 (fun qf => forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv), option (sigT (QFunTyping ftenv fenv qf)))
-                 (fun e => forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv), option (sigT (ExpTyping ftenv tenv fenv e)))
-                 (fun ps => forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv), option (sigT (PrmsTyping ftenv tenv fenv ps)))).
-  intros.
-  induction n.
-  specialize (X fenv0 tenv0).
-  
-  destruct X.
-  destruct s.
-  econstructor.
-  econstructor.
-  econstructor.
-  Focus 2.
-  destruct s.
 
 Definition extractPRunValue (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
    (ps: Prms) (pt: PTyp)
@@ -1414,38 +1392,3 @@ Defined.
   
 
 End Determ.
-
-(*
-Lemma extractTypingOpt  :
-  forall (e: Exp) (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv),
-    option (sigT (ExpTyping ftenv tenv fenv e)).
-  apply (Exp_mut (fun f => option (sigT (FunTyping f)))
-                 (fun qf => forall (ftenv: funTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv), option (sigT (QFunTyping ftenv fenv qf)))
-                 (fun e => forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv), option (sigT (ExpTyping ftenv tenv fenv e)))
-                 (fun ps => forall (ftenv: funTC) (tenv: valTC) (fenv: funEnv) (k: FEnvTyping fenv ftenv), option (sigT (PrmsTyping ftenv tenv fenv ps)))).
-  intros.
-  induction n.
-  cut (sigT (fun ftenv => FEnvTyping fenv ftenv)).
-  intros.
-  destruct X1 as [ftenv X1].
-  specialize (X ftenv tenv fenv X1).
-  destruct X.
-  destruct s.
-  econstructor.
-  econstructor.
-  econstructor.
-  eassumption.
-  eassumption.
-  exact None.
-  
-  specialize (X fenv0 tenv0).
-*)  
-
-
-
-
-
-
-
-
-
