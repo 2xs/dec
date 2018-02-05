@@ -1,9 +1,9 @@
 
 ## Synopsis
 
-This projects contains the development of DEC, an imperative
-functional language with bounded recursion and generic side-effects
-embedded in Coq.
+This projects contains the definition and the development of DEC, a
+functional imperative language with bounded recursion and generic
+side-effects embedded in Coq.
 
 DEC has been designed as an intermediate language to support the
 translation to C of the Pip protokernel
@@ -13,7 +13,16 @@ translation to C of the Pip protokernel
 
 DEC 1.0 language specification, implemented in Coq 8.6.
 
-## Coq modules (src/langspec)
+## Content
+
+* src/langspec: language definition 
+
+* src/DEC1: full language development with proofs 
+            and case study on the verification of Pip invariants
+  
+  (ITP 2018 submission: go to src/DEC1/README.md)
+
+## Coq modules in src/langspec
 
 * EnvLib.v: auxiliary library
 
@@ -29,21 +38,35 @@ DEC 1.0 language specification, implemented in Coq 8.6.
 
   + small-step dynamic semantics
 
-## Building the project
+## Information on modules in src/DEC1
+
+   go to src/DEC1/README.md
+
+## Building the language specification
 
 * run './make2file' to create the Makefile, then 'make' to build the project
 
 * run './makedoc' to generate the pdf documentation (in doc, requires
   pdflatex) and the coqdoc html documentation (in coqdoc)
 
+## Building the full language inclusive of case study and tests
+
+  go to src/DEC1/README.md and run 'make'
+
 ## Contributors
 
-The DEC development team is
+The developers of DEC are
 
 * Paolo Torrini <paolo.torrini@univ-lille1.fr>
 
 * David Nowak <david.nowak@univ-lille1.fr>
 
+Case study contributors:
+
+* Mohamed Sami Cherif <mohamedsami.cherif@yahoo.com>
+
+* Narjes Jomaa <Narjes.Jomaa@univ-lille1.fr>
+
 ## Licence
 
-The source code is covered by a CeCILL-A licence.
+  The source code is covered by a CeCILL-A licence.
