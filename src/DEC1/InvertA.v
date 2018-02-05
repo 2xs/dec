@@ -1112,7 +1112,7 @@ Proof.
   rewrite H.
   rewrite H1.
   auto.
-Qed.
+Defined.
   
 
 Lemma Apply_BStepT2t
@@ -1223,7 +1223,7 @@ Proof.
   rewrite H.
   rewrite H1.
   auto.
-Qed.
+Defined.
   
 
 End Invert.

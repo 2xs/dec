@@ -8,10 +8,11 @@ Require Import Coq.Arith.PeanoNat.
 Require Import Omega.
 Require Import Coq.Lists.List.
 
+Require Import Coq.Logic.ProofIrrelevance.
+
 (*
 Require Import Coq.Strings.String.
 Require Import Coq.Logic.EqdepFacts.
-Require Import Coq.Logic.ProofIrrelevance.
 *)
 
 Require Import StaticSemA.
@@ -498,7 +499,7 @@ Proof.
   eauto.
   eauto.
   eauto.
-Defined.  
+Qed.  
   
 
 Lemma IfTheElse_VHTT1 (P0: W -> Prop) (P1 P2: Value -> W -> Prop) 
@@ -534,6 +535,38 @@ Proof.
   exact X0.
   exact H2.
 Qed.  
+
+
+Lemma Modify_VHTT1 (P: Value -> W -> Prop) 
+        (fenv: funEnv) (env: valEnv)     
+        (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
+        (XF: XFun T1 T2) (v: T1) :
+  THoareTriple_Eval (fun s => P (cst T2 (b_eval T1 T2 XF s v))
+                                ((b_exec T1 T2 XF s v)))
+            P fenv env (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))).
+  unfold THoareTriple_Eval.
+  intros.
+  inversion k3; subst.
+  eapply inj_pair2 in H6; subst.
+  eapply inj_pair2 in H6; subst.
+
+  assert (EStep fenv env (Conf Exp s (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))))
+    (Conf Exp (b_exec T1 T2 XF s v) (Val (cst T2 (b_eval T1 T2 XF s v))))).
+  constructor.
+  eapply StepIsEClos in X1.
+  assert (s' = (b_exec T1 T2 XF s v) /\ v0 = (cst T2 (b_eval T1 T2 XF s v))).
+  eapply ExpConfluence.
+  exact k3.
+  auto.
+  eauto.
+  eassumption.
+  assumption.
+  destruct H0.
+  rewrite H0.
+  rewrite H1.
+  assumption.
+Qed.  
+
 
 End THoare.
 

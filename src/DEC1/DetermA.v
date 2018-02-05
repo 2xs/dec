@@ -1232,6 +1232,9 @@ Definition extractRunShallow (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
   let r := ExpEval ftenv tenv fenv e t k m1 env m2 s in
   (cstExt (projT1 (sigT_of_sigT2 r)), projT1 (projT3 r)).    
 
+Definition extractTyping (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
+           (e: Exp) (k: sigT (ExpTyping ftenv tenv fenv e)) : VTyp :=
+            projT1 k.  
 
 
 Definition extractPRunValue (ftenv: funTC) (tenv: valTC) (fenv: funEnv)

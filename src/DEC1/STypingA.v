@@ -564,7 +564,7 @@ eapply ExpTypingUni_rect.
    rewrite H0.
    rewrite H1.
    auto.
-Qed.   
+Defined.   
 
 
 
@@ -889,7 +889,7 @@ eapply PrmsTypingUni_rect.
    rewrite H0.
    rewrite H1.
    auto.
-Qed.   
+Defined.   
 
 
 Definition QFunTypingUni_rect :=
@@ -1213,7 +1213,7 @@ eapply QFunTypingUni_rect.
    rewrite H0.
    rewrite H1.
    auto.
-Qed.   
+Defined.   
 
  
 Definition FunTypingUni_rect :=
@@ -1535,7 +1535,7 @@ eapply FunTypingUni_rect.
    rewrite H0.
    rewrite H1.
    auto.
-Qed.   
+Defined.   
    
 
 
@@ -1567,7 +1567,7 @@ Proof.
   auto.
   rewrite H0.
   auto.
-Qed.
+Defined.
 
 
 Lemma UniFTypeLm0a (fenv: funEnv) (tenv0: valTC)
@@ -1579,7 +1579,7 @@ Lemma UniFTypeLm0a (fenv: funEnv) (tenv0: valTC)
   eapply UniFTypeLm0.
   eauto.
   auto.
-Qed.
+Defined.
 
 
 Lemma UniFTypeLm0b (fenv: funEnv) (tenv0: valTC)
@@ -1597,7 +1597,7 @@ Lemma UniFTypeLm0b (fenv: funEnv) (tenv0: valTC)
   auto.
   rewrite H.
   auto.
-Qed.
+Defined.
 
 
 Lemma UniFTypeLm1 (fenv: funEnv) (tenv0: valTC)
@@ -1623,7 +1623,7 @@ Proof.
   auto.
   exact X2.
   auto.
-Qed.
+Defined.
 
 
 Lemma UniFTypeLmN (fenv: funEnv) (tenv0: valTC)
@@ -1661,7 +1661,7 @@ Proof.
   auto.
   eapply X2.
   auto.
-Qed.
+Defined.
 
  
 
@@ -1682,7 +1682,7 @@ Lemma UniFTypeLm1b (fenv: funEnv) (tenv0: valTC)
   auto.
   rewrite H.
   auto.
-Qed.
+Defined.
 
 
 
@@ -1723,7 +1723,7 @@ Proof.
     }
     rewrite H.
     auto.
-Qed.    
+Defined.    
 
 Lemma UniFTypeLmNZE1 (fenv: funEnv) (tenv0: valTC)
       (e0 e1: Exp) (x: Id) (ft: FTyp) :
@@ -1735,7 +1735,7 @@ Proof.
   inversion X; subst.  
   econstructor.
   eassumption.
-Qed.
+Defined.
 
 
 
@@ -1754,7 +1754,7 @@ Proof.
   rewrite <- X0.
   auto.
   auto.
-Qed.  
+Defined.  
 
 
 Lemma UniFTypeLmNZ (fenv: funEnv) (tenv0: valTC)
@@ -1769,7 +1769,7 @@ Proof.
   eapply UniFTypeLmNZ1 in X.
   eapply IHn.
   auto.
-Qed.
+Defined.
 
 
 
@@ -1787,7 +1787,7 @@ Proof.
   exact H.
   inversion X; subst.
   auto. 
-Qed.  
+Defined.  
 
 
 Lemma UniqueFunType (f: Fun) (ft1 ft2: FTyp)
@@ -1797,7 +1797,7 @@ Proof.
   eapply UniFTypeLm with (k:=k1).
   eapply FunStrongTyping.
   eauto.
-Qed.
+Defined.
 
 Lemma UniFTypeLmNZ2 (fenv: funEnv) (tenv0: valTC)
       (e0 e1: Exp) (x: Id) (ft: FTyp) :
@@ -1843,7 +1843,7 @@ Proof.
   auto.
   rewrite H0.
   auto.
-Qed.
+Defined.
 
 
 Lemma UniqueExpType (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
@@ -1856,7 +1856,7 @@ Lemma UniqueExpType (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
   auto.
   eauto.
   auto.
-Qed.
+Defined.
 
 Lemma UniquePrmsType (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
       (ps: Prms) (pt1 pt2: PTyp)
@@ -1868,7 +1868,7 @@ Lemma UniquePrmsType (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
   auto.
   eauto.
   auto.
-Qed.
+Defined.
 
 Lemma UniqueQFunType (ftenv: funTC) (fenv: funEnv)
       (qf: QFun) (ft1 ft2: FTyp)
@@ -1880,7 +1880,7 @@ Lemma UniqueQFunType (ftenv: funTC) (fenv: funEnv)
   auto.
   eauto.
   auto.
-Qed.
+Defined.
 
   
 End STyping.
