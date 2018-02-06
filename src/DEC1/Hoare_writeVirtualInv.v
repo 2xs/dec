@@ -1,3 +1,8 @@
+(* Mohamed Sami Cherif, with Narjes Jomaa and Paolo Torrini 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* verification of the writeVirtualInv invariant *)
+
 Require Export EnvLibA.
 Require Export RelLibA.
 Require Export PRelLibA.
@@ -41,8 +46,6 @@ Export VirtualInv.
 (**************************************************)
 
 (******* Program *)
-
-(** WriteVirtualInv -page -index -vaddress : writes the vaddress at key (page,index) in memory *)
 
 Definition xf_writeVirtual (p: page) (i: index) (v: vaddr) : XFun unit unit := {|
    b_mod := fun s _ => (writeVirtualInternal p i v s,tt)

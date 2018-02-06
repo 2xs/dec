@@ -1,3 +1,5 @@
+(* Narjes Jomaa and David Nowak, 
+   Pip code refactored by Mohamed Sami Cherif *)
 (**PIP STATE *)
 Require Import List Bool Arith Omega Lib.
 Import List.ListNotations.

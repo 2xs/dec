@@ -1,3 +1,8 @@
+(* David Nowak, with Paolo Torrini 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* Haskell program extraction of DEC1 interpreter *)
+
 Require Import ExtrHaskellBasic ExtrHaskellNatInt.
 (*Require Import ExtrOcamlBasic ExtrOcamlNatInt.*)
 Require Import ProofIrrelevance PeanoNat.

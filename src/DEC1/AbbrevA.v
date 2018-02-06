@@ -1,3 +1,9 @@
+(* DEC1 language development.
+   Paolo Torrini, 
+   Universite' Lille-1 - CRIStAL-CNRS
+ *)
+(* useful DEC definitions *)
+
 Require Export Coq.Program.Equality.
 Require Import Coq.Init.Specif.
 Require Import Coq.Arith.PeanoNat.

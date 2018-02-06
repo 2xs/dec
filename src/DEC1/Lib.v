@@ -1,3 +1,5 @@
+(* Narjes Jomaa and David Nowak, 
+   Pip code refactored by Mohamed Sami Cherif *)
 Require Import List NPeano Omega Coq.Logic.Classical_Prop Bool.
 Import List.ListNotations.
 

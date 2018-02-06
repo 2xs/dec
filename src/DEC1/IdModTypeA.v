@@ -1,3 +1,9 @@
+(* DEC1 language development.
+   Paolo Torrini, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* module type *)
+
 Require Import EnvLibA.
 
 

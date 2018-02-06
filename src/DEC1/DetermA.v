@@ -1,3 +1,8 @@
+(* DEC1 language development.
+   Paolo Torrini, with David Nowak
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* proofs about determinism *)
 
 Require Export Basics.
 

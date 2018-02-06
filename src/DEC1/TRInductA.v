@@ -1,3 +1,9 @@
+(* DEC1 language development.
+   Paolo Torrini, wtih David Nowak 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* induction principle for the typing relations *)
+
 Require Export Basics.
 Require Export Coq.Program.Equality.
 Require Import Coq.Init.Specif.

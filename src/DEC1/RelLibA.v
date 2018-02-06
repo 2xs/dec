@@ -1,4 +1,7 @@
-(* coq_makefile *.v -o Makefile -Q . "" *)
+(* Paolo Torrini, 
+   Universite' Lille-1 
+*)
+(* library of auxiliary functions on relations, lists and environments *)
 
 Require Import Coq.Lists.List.
 

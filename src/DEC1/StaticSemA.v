@@ -1,3 +1,8 @@
+(* DEC1 language development.
+   Paolo Torrini, with David Nowak 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* language syntax and static semantics *)
 
 Require Export EnvLibA.
 Require Export RelLibA.
@@ -25,7 +30,7 @@ Definition BInit := IdT.BInit.
 Definition WP := IdT.WP.
 
   
-(** effect handler record *)
+(** generic effect record *)
 
 Record XFun (T1 T2: Type) : Type := {
     b_mod : W -> T1 -> prod W T2 ;
@@ -154,7 +159,7 @@ Inductive QValue : Type := Var (x: Id) | QV (v: Value).
 
 (*************************************************************************)
 
-(** syntactic tag type *)
+(** syntactic tag type - NOT USED, TO BE REMOVED *)
 
 Inductive Tag : Type := LL | RR.
 
@@ -167,8 +172,6 @@ with QFun : (** Quasi-functions *)
    Type := FVar (x: Id) | QF (v: Fun)
 with Exp : (** Expressions *)
        Type :=
-(*         Reset  *)
-(*         | Read (W T: Type) (XF: XFun W T) (VT: ValTyp T)   *)
          | Modify (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
                   (XF: XFun T1 T2) (q: QValue)
          | Return (G: Tag) (q: QValue)
@@ -355,7 +358,7 @@ Inductive ProgTyping : (** Functions *)
 
 (**********************************************************************)
 
-(** value typing lemmas from CRelLib *)
+(** value typing lemmas from RelLib *)
 
 Definition ExTDefVal := ExRelValT ValueTyping.
 
@@ -370,7 +373,7 @@ Definition ValTypedByEnv := RelatedByEnvEP2_T ValueTyping.
 Definition ValTypedByEnvA := RelatedByEnvEP_T ValueTyping.
 
 
-(** fun typing lemmas from CRelLib *)
+(** fun typing lemmas from RelLib *)
 
 Definition ExTDefFun := ExRelValT FunTyping.
 

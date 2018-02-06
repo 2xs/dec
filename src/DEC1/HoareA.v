@@ -1,3 +1,8 @@
+(* Paolo Torrini and Mohamed Sami Cherif, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* untyped Hoare logic for DEC1 (preliminary) *)
+
 Require Export Coq.Program.Equality.
 Require Import Coq.Init.Specif.
 Require Import Coq.Arith.PeanoNat.

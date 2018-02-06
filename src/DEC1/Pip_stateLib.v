@@ -1,3 +1,5 @@
+(* Narjes Jomaa and David Nowak, 
+   Pip code refactored by Mohamed Sami Cherif *)
 Require Import Pip_state Lib.
 
 Require Import ProofIrrelevance  Coq.Program.Equality Arith List Omega.

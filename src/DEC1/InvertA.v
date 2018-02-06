@@ -1,4 +1,8 @@
-
+(* DEC1 language development.
+   Paolo Torrini, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* inversion lemmas for the step rules *)
 Require Export Basics.
 Require Export EnvLibA.
 Require Export RelLibA.

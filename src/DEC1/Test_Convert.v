@@ -1,3 +1,8 @@
+(* Paolo Torrini and Daid Nowak, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* test module *)
+
 Require Import Coq.Lists.List.
 Require Import Coq.Strings.String.
 Require Import StaticSemA.
@@ -546,48 +551,5 @@ Lemma expTypingTestDAppA (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
 Defined.  
 
 
-(*
-Definition succIndexInternal (idx: index) : Exp :=
-  BindS i (extract1 idx) (BindS P (extract2 idx))
-        (IfThenElse (Lt_dec i) (apply DSome 
-                                   (Apply IndexSucc (Var i))) DNone) .
-*)
-
-(*
-Definition plusR_X (n:nat) := QF (FC emptyE [("i",Nat)]
-       (VLift (Var "i"))
-       (SuccR_X (Apply (FVar "plusR") (PS [VLift (Var "i")])))
-       "plusR" n).
-
-Definition plusX := FC emptyE [("i",Nat),("j",Nat)]
-    (Val 0)
-    (IfThenElse (EEqual 0 "j")
-                (VLift (Var "i"))
-                (Apply (FVar "plusR") (PS [VLift (Var "i"), PredR "j"]))).
-*)
-
 End Convert2.
-
-(*
-
-(* il faudrait bien commencer par définir l’ensemble des identifiants possibles ?
-   est-ce que tricher avec un type comme string serait faisable ? *)
-Inductive Id : Type := partition | idxPD | idx.
-(* Mais je n’arrive pas à créer de valeur de type TPipStatic20.Id, qui
-   est le type attendu, est-ce normal ? *)
-
-(* comment se fait qu’About Fun n’indique pas de dépendance à un type Id ? *)
-Definition corps : Exp.
-Admitted.
-
-Definition getPdFun : Fun := FC nil nil corps corps partition 0.
-  (* FC : pas d’autre choix de toute façon *)
-  (* [] : pas d’environnements, si ? que pourraient-ils contenir ? *)
-  (* [] : des constantes, comme par exemple la valeur de N ? *)
-  (* corps *)
-  (* corps : ici, il n’est pas nécessaire de faire une différence entre les cas 0 et 1, si ? *)
-  (* partition : c’est bien l’argument ? *)
-  (* 0. *)
-
- *)
 

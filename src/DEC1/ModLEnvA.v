@@ -1,3 +1,8 @@
+(* Mohamed Sami Cherif and Paolo Torrini, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* example of concrete module *)
+
 Require Import EnvLibA.
 Require Import PRelLibA.
 Require Import IdModTypeA.

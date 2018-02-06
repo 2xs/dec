@@ -1,3 +1,8 @@
+(* DEC1 language development.
+   Paolo Torrini, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* subject reduction *)
 
 Require Export Basics.
 

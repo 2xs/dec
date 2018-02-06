@@ -1,3 +1,5 @@
+(* Narjes Jomaa and David Nowak, 
+   Pip code refactored by Mohamed Sami Cherif *)
 (** * Summary 
     This file contains several internal lemmas to help prove invariants *)
 Require Import Lib Pip_state Pip_stateLib Pip_Prop List Pip_DependentTypeLemmas.

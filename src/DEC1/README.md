@@ -8,9 +8,9 @@ verification of Pip invariants.
 
 DEC 1.0 language development, implemented in Coq 8.6.
 
-## Language development modules
+## Language development [contributors: Torrini (main), Nowak]
 
-* auxiliary libraries: EnvLibA.v, RelLibA, PRelLibA.v, DECaux.v 
+* auxiliary libraries: EnvLibA.v, RelLibA, PRelLibA.v
 
 * module type: IdModTypeA.v
 
@@ -18,44 +18,44 @@ DEC 1.0 language development, implemented in Coq 8.6.
 
 * dynamic semantics: DynamicSemA.v
 
-* proofs: WeakenA.v, SReducA.v, TSoundnessA.V, DetermA.v, STypingA.v
+* main proofs: WeakenA.v, SReducA.v, TSoundnessA.V, DetermA.v, STypingA.v
 
-* definitions: AbbrevA.v
+* DEC libraries: AbbrevA.v, InvertA,v, DECauxB.v
 
-* extraction: Extraction.v
+* extraction: Extraction.v [Nowak]
 
-* Hoare logic: InvertA.v HoareA.v, THoareA.v
+## Hoare logic: HoareA.v, THoareA.v [contributors: Torrini (main), Cherif]
 
-## Case study modules
+## Case study [contributors: Cherif (main), Torrini]
 
 * module: IdModPip.v
 
 * case study proofs:
      Hoare_getFstShadow.v, Hoare_writeVirtualInv.v, Hoare_initVAddrTable.v
 
-* modules imported from Pip:
+## modules imported from Pip [contributors: Jomaa (main), Nowak; refactored by Cherif]:
      Lib.v, Pip_DependentTypeLemmas.v, Pip_InternalLemmas.v, Pip_Prop.v,
      Pip_stateLib.v, Pip_writeVirtualInv_Lemmas.v
 
-## Testing modules
+## Testing [contributors: Torrini, Nowak, Cherif]
 
 * modules: ModNat1A.v, ModLEnvA.v, ModNEnvA.v
 
-* tests: Test_Nat1A.v, TestLEnvA.v, Test_Convert.v
+* test functions: Test_Nat1A.v, TestLEnvA.v, Test_Convert.v
 
 ## Building the full project
 
-  simply run 'make'
+  run 'make'
 
 ## Contributors
 
-The developers of DEC are
+for the development of DEC:
 
 * Paolo Torrini <paolo.torrini@univ-lille1.fr>
 
 * David Nowak <david.nowak@univ-lille1.fr>
 
-Case study contributors:
+for the case study on Pip:
 
 * Mohamed Sami Cherif <mohamedsami.cherif@yahoo.com>
 

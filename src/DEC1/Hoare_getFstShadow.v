@@ -1,3 +1,8 @@
+(* Mohamed Sami Cherif, with Narjes Jomaa and Paolo Torrini
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* verification of the getFstShadow invariant *)
+
 Require Export EnvLibA.
 Require Export RelLibA.
 Require Export PRelLibA.
@@ -42,67 +47,6 @@ Definition WP := FstShadow.WP.
 (**************************************************)
 
 Open Scope state_scope.
-
-
-(****** Hoare logic *)
-(*
-Notation "{{ P }} fenv >> env >> e {{ Q }}" := (THoareTriple_Eval P Q fenv env e ) 
-(at level 90) : state_scope.
-
-Open Scope state_scope.
-
-
-
-Definition wp (P : Value -> W -> Prop) (fenv: funEnv) (env: valEnv) (e : Exp) :
-  W -> Prop := fun s => forall (v:Value) (s': W),
-EClosure fenv env (Conf Exp s e) (Conf Exp s' (Val v)) -> P v s'.
-
-Lemma wpIsPrecondition (P : Value -> W -> Prop) (fenv: funEnv) (env: valEnv) (e : Exp) :
-  {{ wp P fenv env e }} fenv >> env >> e {{ P }}.
-Proof.
-unfold THoareTriple_Eval.
-intros ftenv tenv k1 k2 t k3 s s' v H1 H2.
-unfold wp in H2.
-eapply H2.
-auto.
-Qed.
-
-Lemma weakenEval (P Q : W -> Prop) (R : Value -> W -> Prop) (fenv: funEnv) (env: valEnv) (e : Exp) :
-  {{ Q }} fenv >> env >> e {{ R }} -> (forall s, P s -> Q s) -> {{ P }} fenv >> env >> e {{ R }}.
-Proof.
-intros.
-unfold THoareTriple_Eval in *.
-intros.
-eapply H;
-eauto.
-Qed.
-
-Definition wpPrms (P : list Value -> W -> Prop) (fenv: funEnv) (env: valEnv) (ps: Prms):
-  W -> Prop := fun s => forall (vs: list Value) (s': W),
-PrmsClosure fenv env (Conf Prms s ps) (Conf Prms s' (PS (map Val vs))) -> P vs s'.
-
-Lemma wpIsPreconditionPrms (P : list Value -> W -> Prop) (fenv: funEnv) (env: valEnv) (ps: Prms):
-  THoarePrmsTriple_Eval (wpPrms P fenv env ps) P fenv env ps.
-Proof.
-unfold THoarePrmsTriple_Eval.
-intros ftenv tenv k1 k2 t k3 s s' v H1 H2.
-unfold wpPrms in H2.
-eapply H2.
-auto.
-Qed.
-
-Lemma weakenPrms (P Q : W -> Prop) (R : list Value -> W -> Prop) (fenv: funEnv) (env: valEnv) (ps: Prms):
-  THoarePrmsTriple_Eval Q R fenv env ps ->
- (forall s, P s -> Q s) -> THoarePrmsTriple_Eval P R fenv env ps .
-Proof.
-intros.
-unfold THoarePrmsTriple_Eval in *.
-intros.
-eapply H;
-eauto.
-Qed.
-
-*)
 
 (******* Program *)
 
@@ -935,500 +879,6 @@ apply inj_pair2 in H4.
 inversion H4.
 Qed.
 
-(*Proof without Hoare Lemmas
-
-Lemma succRecWByInversion  (x : Id) (P: Value -> W -> Prop) (v:Value) (fenv: funEnv) (env: valEnv) :
-forall (idx:index), {{fun s => idx < (tableSize -1) /\ forall  l : idx + 1 < tableSize , 
-    P (cst (option index) (succIndexInternal idx)) s /\ v = cst index idx }}  
-fenv >> (x,v)::env >> SuccRec x {{ P }}.
-Proof.
-intros.
-unfold THoareTriple_Eval.
-intros.
-clear k3 t k2 k1 tenv ftenv.
-intuition.
-destruct H1 as [H1 H1'].
-omega.
-inversion X;subst.
-inversion X0;subst.
-inversion X2;subst.
-repeat apply inj_pair2 in H7;subst.
-inversion X3;subst.
-inversion X4;subst.
-inversion H;subst.
-destruct IdModP.IdEqDec in H3;try contradiction.
-inversion H3;subst.
-clear H3 e X4 H XF1.
-inversion X1;subst.
-inversion X4;subst.
-inversion X6;subst.
-repeat apply inj_pair2 in H7.
-repeat apply inj_pair2 in H9.
-subst.
-unfold b_exec,b_eval,xf_prj1, b_mod in *.
-simpl in *.
-destruct idx.
-inversion X5;subst.
-inversion X7;subst.
-inversion X8;subst.
-inversion X9;subst.
-simpl in *.
-inversion X11;subst.
-inversion X12;subst.
-repeat apply inj_pair2 in H7.
-subst.
-inversion X13;subst.
-inversion X14;subst.
-inversion H;subst.
-clear H X14 XF2.
-inversion X10;subst.
-inversion X14;subst.
-simpl in *.
-inversion X16;subst.
-inversion X17;subst.
-repeat apply inj_pair2 in H7.
-repeat apply inj_pair2 in H10.
-subst.
-unfold b_exec,b_eval,xf_LtDec,b_mod in *.
-simpl in *.
-case_eq (lt_dec i tableSize);intros; try contradiction.
-rewrite H in X17,H1.
-inversion X15;subst.
-inversion X18;subst.
-simpl in *.
-inversion X20; subst.
-clear H6.
-inversion X19;subst.
-inversion X21;subst.
-simpl in *.
-inversion X23;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X24;subst.
-inversion X25;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X26;subst.
-inversion X27;subst.
-inversion X28;subst.
-inversion X29;subst.
-inversion H2;subst.
-clear X29 H2.
-inversion X22;subst.
-inversion X29;subst.
-inversion X31;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-simpl in *.
-inversion X32;subst.
-inversion X33;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-unfold mkVEnv in *.
-simpl in *.
-inversion X34;subst.
-inversion X35;subst.
-inversion X30;subst.
-inversion X36;subst.
-simpl in *.
-inversion X38;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X39;subst.
-inversion X40;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2;subst.
-destruct vs; inversion H5.
-unfold mkVEnv in *.
-simpl in *.
-clear H5 H7 H17 H2.
-inversion X37;subst.
-inversion X41;subst.
-inversion X43;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X44;subst.
-inversion X45;subst.
-inversion X46;subst.
-simpl in *.
-inversion X47;subst.
-inversion X48;subst.
-inversion X49;subst.
-inversion H2;subst.
-clear X49 H2.
-inversion X42;subst.
-inversion X49;subst.
-inversion X51;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X52;subst.
-inversion X53;subst.
-inversion X54;subst.
-inversion X55;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-simpl in *.
-inversion X56;subst.
-inversion X57;subst.
-inversion X58;subst.
-inversion X59;subst.
-inversion H2;subst.
-clear X59 H2.
-inversion X50;subst.
-inversion X59;subst.
-inversion X61;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-simpl in *.
-inversion X62;subst.
-inversion X63;subst.
-simpl in *.
-inversion X64;subst.
-inversion X65;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-simpl in *.
-inversion X66;subst.
-inversion X67;subst.
-inversion X60;subst.
-inversion X68;subst.
-inversion X70;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-simpl in *.
-inversion X71;subst.
-inversion X72;subst.
-inversion X73;subst.
-inversion X74;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2;subst.
-destruct vs; inversion H5.
-unfold mkVEnv in *.
-simpl in *.
-clear H5 H7 H16 H2.
-inversion X69;subst.
-inversion X75;subst.
-inversion X77;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X78;subst.
-inversion X79;subst.
-inversion X80;subst.
-inversion X81;subst.
-simpl in *.
-inversion X60;subst.
-inversion X82;subst.
-inversion X84;subst.
-inversion X85;subst.
-simpl in *.
-inversion X86;subst.
-inversion H2;subst.
-clear X86 H2.
-inversion X83;subst.
-inversion X85;subst.
-inversion X88;subst.
-inversion H2;subst.
-clear X88 H2.
-inversion X83;subst.
-inversion X88;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X89;subst.
-inversion X90;subst.
-simpl in *.
-inversion X91;subst.
-inversion X92;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2;subst.
-destruct vs; inversion H5.
-unfold mkVEnv in *.
-simpl in *.
-clear H5 H7 H16 H2.
-inversion X86;subst.
-inversion X93;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X94;subst.
-inversion X95;subst.
-simpl in *.
-inversion X96;subst.
-inversion X97;subst.
-simpl in *.
-inversion X98;subst.
-inversion X99;subst.
-inversion X100;subst.
-inversion H2;subst.
-clear X100 H2.
-inversion X87;subst.
-inversion X100;subst.
-inversion X102;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X103;subst.
-inversion X104;subst.
-inversion X105;subst.
-simpl in *.
-clear X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 
-      X11 X12 X13 X14 X15 X16 X17 X18 X19 X20 
-      X21 X22 X23 X24 X25 X26 X27 X28 X29 X30 
-      X31 X32 X33 X34 X35 X36 X36 X38 X39 X40
-      X41 X42 X43 X44 X45 X46 X47 X48 X49 X50.
-inversion X106;subst.
-simpl in *.
-inversion X1;subst.
-inversion X101;subst.
-inversion X2;subst.
-inversion X4;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X5;subst.
-inversion X6;subst.
-inversion X7;subst.
-simpl in *.
-inversion X8;subst.
-inversion X3;subst.
-inversion X9;subst.
-inversion X11;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X12;subst.
-inversion X13;subst.
-inversion X14;subst.
-simpl in *.
-inversion X10;subst.
-inversion X15;subst.
-inversion X17;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X18;subst.
-inversion X19;subst.
-simpl in *.
-inversion X20;subst.
-inversion X21;subst.
-repeat apply inj_pair2 in H10.
-subst.
-inversion X22;subst.
-simpl in *.
-inversion X23;subst.
-inversion H2;subst.
-clear X23 H2 XF3.
-inversion X16;subst.
-inversion X23;subst.
-inversion X25;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X26;subst.
-inversion X27;subst.
-inversion X28;subst.
-simpl in *.
-inversion X29;subst.
-repeat apply inj_pair2 in H10.
-repeat apply inj_pair2 in H12.
-subst.
-unfold b_exec,b_eval,xf_SuccD,b_mod in *.
-simpl in *.
-inversion X16;subst.
-inversion X30;subst.
-clear X51 X52 X53 X54 X55 X56 X57 X58 X59 X60
-      X61 X62 X63 X64 X65 X66 X67 X68 X69 X70
-      X71 X72 X73 X74 X75 X76 X77 X78 X79 X80
-      X81 X82 X83 X84 X85 X86 X87 X88 X89 X90
-      X91 X92 X93 X94 X95 X96 X97 X98 X99 X100
-      X101 X102 X103 X104 X105 X106.
-inversion X32;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X33;subst.
-inversion X34;subst.
-simpl in *.
-inversion X35;subst.
-inversion X36;subst.
-repeat apply inj_pair2 in H10.
-repeat apply inj_pair2 in H13.
-subst.
-unfold b_exec,b_eval,b_mod in *.
-simpl in *.
-inversion X24;subst.
-inversion X38;subst.
-inversion X40;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X41;subst.
-inversion X42;subst.
-inversion X43;subst.
-inversion X39;subst.
-inversion X44;subst.
-inversion X46;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X47;subst.
-inversion X48;subst.
-inversion X39;subst.
-inversion X49;subst.
-inversion X51;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2.
-inversion X52;subst.
-inversion X53;subst.
-simpl in *.
-clear X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 
-      X11 X12 X13 X14 X15 X16 X17 X18 X19 X20 
-      X21 X22 X23 X24 X25 X26 X27 X28 X29 X30. 
-inversion X50;subst.
-inversion X1;subst.
-inversion X3;subst.
-inversion H7;subst.
-destruct vs.
-inversion H2.
-inversion H2;subst.
-destruct vs; inversion H5.
-unfold mkVEnv in *.
-simpl in *.
-clear H5 H7 H18 H2.
-inversion X2;subst.
-inversion X4;subst.
-simpl in *.
-inversion X5;subst.
-inversion X6;subst.
-inversion X9;subst.
-repeat apply inj_pair2 in H10.
-subst.
-inversion X10;subst.
-inversion X11;subst.
-inversion H2;subst.
-clear X11 H2 XF5.
-inversion X7;subst.
-inversion X11;subst.
-inversion X12;subst.
-repeat apply inj_pair2 in H10.
-repeat apply inj_pair2 in H14.
-subst.
-unfold b_exec,b_eval,xf_SomeCindex,b_mod in *.
-simpl in *.
-inversion X8;subst.
-inversion X13;subst.
-inversion X15;subst.
-simpl in *.
-inversion X14;subst.
-inversion X16;subst.
-inversion X17;subst.
-assert (Z : S i = i+1). 
-omega.
-rewrite Z.
-auto.
-inversion X18.
-inversion X18.
-inversion X16.
-inversion X13.
-inversion X4;subst.
-inversion X5.
-inversion X5.
-inversion X4.
-inversion X54.
-inversion X52.
-inversion X49.
-inversion X47.
-inversion X44.
-inversion X41.
-inversion X38.
-inversion X33.
-inversion X30.
-inversion X26.
-inversion X18.
-inversion X15.
-inversion X12.
-inversion X9.
-inversion X5.
-inversion X2.
-inversion X103.
-inversion X94.
-inversion X93;subst.
-inversion X94.
-inversion X94.
-inversion X93.
-inversion X89.
-inversion X78.
-inversion X75;subst.
-inversion X76.
-inversion X76.
-inversion X75.
-inversion X71.
-inversion X68.
-inversion X66.
-inversion X62.
-inversion X56.
-inversion X52.
-inversion X44.
-inversion X41;subst.
-inversion X42.
-inversion X42.
-inversion X41.
-inversion X39.
-inversion X36.
-inversion X34.
-inversion X32.
-inversion X26.
-inversion X24.
-repeat apply inj_pair2 in H6.
-rewrite H in H6; inversion H6.
-rewrite H in X21; inversion X21.
-inversion X18.
-inversion X9.
-inversion X7.
-Qed.
-*)
 
 Lemma succRecWp (x:Id) (v:Value) P (fenv: funEnv) (env: valEnv) :
 forall (idx:index), {{fun s => P s  /\ idx < tableSize - 1 /\ v=cst index idx}} fenv >> (x,v)::env >> SuccRec x 
@@ -2002,3 +1452,499 @@ Qed.
 
 
 End Hoare_Test_FstShadow.
+
+
+(*Proof without Hoare Lemmas
+
+Lemma succRecWByInversion  (x : Id) (P: Value -> W -> Prop) (v:Value) (fenv: funEnv) (env: valEnv) :
+forall (idx:index), {{fun s => idx < (tableSize -1) /\ forall  l : idx + 1 < tableSize , 
+    P (cst (option index) (succIndexInternal idx)) s /\ v = cst index idx }}  
+fenv >> (x,v)::env >> SuccRec x {{ P }}.
+Proof.
+intros.
+unfold THoareTriple_Eval.
+intros.
+clear k3 t k2 k1 tenv ftenv.
+intuition.
+destruct H1 as [H1 H1'].
+omega.
+inversion X;subst.
+inversion X0;subst.
+inversion X2;subst.
+repeat apply inj_pair2 in H7;subst.
+inversion X3;subst.
+inversion X4;subst.
+inversion H;subst.
+destruct IdModP.IdEqDec in H3;try contradiction.
+inversion H3;subst.
+clear H3 e X4 H XF1.
+inversion X1;subst.
+inversion X4;subst.
+inversion X6;subst.
+repeat apply inj_pair2 in H7.
+repeat apply inj_pair2 in H9.
+subst.
+unfold b_exec,b_eval,xf_prj1, b_mod in *.
+simpl in *.
+destruct idx.
+inversion X5;subst.
+inversion X7;subst.
+inversion X8;subst.
+inversion X9;subst.
+simpl in *.
+inversion X11;subst.
+inversion X12;subst.
+repeat apply inj_pair2 in H7.
+subst.
+inversion X13;subst.
+inversion X14;subst.
+inversion H;subst.
+clear H X14 XF2.
+inversion X10;subst.
+inversion X14;subst.
+simpl in *.
+inversion X16;subst.
+inversion X17;subst.
+repeat apply inj_pair2 in H7.
+repeat apply inj_pair2 in H10.
+subst.
+unfold b_exec,b_eval,xf_LtDec,b_mod in *.
+simpl in *.
+case_eq (lt_dec i tableSize);intros; try contradiction.
+rewrite H in X17,H1.
+inversion X15;subst.
+inversion X18;subst.
+simpl in *.
+inversion X20; subst.
+clear H6.
+inversion X19;subst.
+inversion X21;subst.
+simpl in *.
+inversion X23;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X24;subst.
+inversion X25;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X26;subst.
+inversion X27;subst.
+inversion X28;subst.
+inversion X29;subst.
+inversion H2;subst.
+clear X29 H2.
+inversion X22;subst.
+inversion X29;subst.
+inversion X31;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+simpl in *.
+inversion X32;subst.
+inversion X33;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+unfold mkVEnv in *.
+simpl in *.
+inversion X34;subst.
+inversion X35;subst.
+inversion X30;subst.
+inversion X36;subst.
+simpl in *.
+inversion X38;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X39;subst.
+inversion X40;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2;subst.
+destruct vs; inversion H5.
+unfold mkVEnv in *.
+simpl in *.
+clear H5 H7 H17 H2.
+inversion X37;subst.
+inversion X41;subst.
+inversion X43;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X44;subst.
+inversion X45;subst.
+inversion X46;subst.
+simpl in *.
+inversion X47;subst.
+inversion X48;subst.
+inversion X49;subst.
+inversion H2;subst.
+clear X49 H2.
+inversion X42;subst.
+inversion X49;subst.
+inversion X51;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X52;subst.
+inversion X53;subst.
+inversion X54;subst.
+inversion X55;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+simpl in *.
+inversion X56;subst.
+inversion X57;subst.
+inversion X58;subst.
+inversion X59;subst.
+inversion H2;subst.
+clear X59 H2.
+inversion X50;subst.
+inversion X59;subst.
+inversion X61;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+simpl in *.
+inversion X62;subst.
+inversion X63;subst.
+simpl in *.
+inversion X64;subst.
+inversion X65;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+simpl in *.
+inversion X66;subst.
+inversion X67;subst.
+inversion X60;subst.
+inversion X68;subst.
+inversion X70;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+simpl in *.
+inversion X71;subst.
+inversion X72;subst.
+inversion X73;subst.
+inversion X74;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2;subst.
+destruct vs; inversion H5.
+unfold mkVEnv in *.
+simpl in *.
+clear H5 H7 H16 H2.
+inversion X69;subst.
+inversion X75;subst.
+inversion X77;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X78;subst.
+inversion X79;subst.
+inversion X80;subst.
+inversion X81;subst.
+simpl in *.
+inversion X60;subst.
+inversion X82;subst.
+inversion X84;subst.
+inversion X85;subst.
+simpl in *.
+inversion X86;subst.
+inversion H2;subst.
+clear X86 H2.
+inversion X83;subst.
+inversion X85;subst.
+inversion X88;subst.
+inversion H2;subst.
+clear X88 H2.
+inversion X83;subst.
+inversion X88;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X89;subst.
+inversion X90;subst.
+simpl in *.
+inversion X91;subst.
+inversion X92;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2;subst.
+destruct vs; inversion H5.
+unfold mkVEnv in *.
+simpl in *.
+clear H5 H7 H16 H2.
+inversion X86;subst.
+inversion X93;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X94;subst.
+inversion X95;subst.
+simpl in *.
+inversion X96;subst.
+inversion X97;subst.
+simpl in *.
+inversion X98;subst.
+inversion X99;subst.
+inversion X100;subst.
+inversion H2;subst.
+clear X100 H2.
+inversion X87;subst.
+inversion X100;subst.
+inversion X102;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X103;subst.
+inversion X104;subst.
+inversion X105;subst.
+simpl in *.
+clear X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 
+      X11 X12 X13 X14 X15 X16 X17 X18 X19 X20 
+      X21 X22 X23 X24 X25 X26 X27 X28 X29 X30 
+      X31 X32 X33 X34 X35 X36 X36 X38 X39 X40
+      X41 X42 X43 X44 X45 X46 X47 X48 X49 X50.
+inversion X106;subst.
+simpl in *.
+inversion X1;subst.
+inversion X101;subst.
+inversion X2;subst.
+inversion X4;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X5;subst.
+inversion X6;subst.
+inversion X7;subst.
+simpl in *.
+inversion X8;subst.
+inversion X3;subst.
+inversion X9;subst.
+inversion X11;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X12;subst.
+inversion X13;subst.
+inversion X14;subst.
+simpl in *.
+inversion X10;subst.
+inversion X15;subst.
+inversion X17;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X18;subst.
+inversion X19;subst.
+simpl in *.
+inversion X20;subst.
+inversion X21;subst.
+repeat apply inj_pair2 in H10.
+subst.
+inversion X22;subst.
+simpl in *.
+inversion X23;subst.
+inversion H2;subst.
+clear X23 H2 XF3.
+inversion X16;subst.
+inversion X23;subst.
+inversion X25;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X26;subst.
+inversion X27;subst.
+inversion X28;subst.
+simpl in *.
+inversion X29;subst.
+repeat apply inj_pair2 in H10.
+repeat apply inj_pair2 in H12.
+subst.
+unfold b_exec,b_eval,xf_SuccD,b_mod in *.
+simpl in *.
+inversion X16;subst.
+inversion X30;subst.
+clear X51 X52 X53 X54 X55 X56 X57 X58 X59 X60
+      X61 X62 X63 X64 X65 X66 X67 X68 X69 X70
+      X71 X72 X73 X74 X75 X76 X77 X78 X79 X80
+      X81 X82 X83 X84 X85 X86 X87 X88 X89 X90
+      X91 X92 X93 X94 X95 X96 X97 X98 X99 X100
+      X101 X102 X103 X104 X105 X106.
+inversion X32;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X33;subst.
+inversion X34;subst.
+simpl in *.
+inversion X35;subst.
+inversion X36;subst.
+repeat apply inj_pair2 in H10.
+repeat apply inj_pair2 in H13.
+subst.
+unfold b_exec,b_eval,b_mod in *.
+simpl in *.
+inversion X24;subst.
+inversion X38;subst.
+inversion X40;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X41;subst.
+inversion X42;subst.
+inversion X43;subst.
+inversion X39;subst.
+inversion X44;subst.
+inversion X46;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X47;subst.
+inversion X48;subst.
+inversion X39;subst.
+inversion X49;subst.
+inversion X51;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2.
+inversion X52;subst.
+inversion X53;subst.
+simpl in *.
+clear X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 
+      X11 X12 X13 X14 X15 X16 X17 X18 X19 X20 
+      X21 X22 X23 X24 X25 X26 X27 X28 X29 X30. 
+inversion X50;subst.
+inversion X1;subst.
+inversion X3;subst.
+inversion H7;subst.
+destruct vs.
+inversion H2.
+inversion H2;subst.
+destruct vs; inversion H5.
+unfold mkVEnv in *.
+simpl in *.
+clear H5 H7 H18 H2.
+inversion X2;subst.
+inversion X4;subst.
+simpl in *.
+inversion X5;subst.
+inversion X6;subst.
+inversion X9;subst.
+repeat apply inj_pair2 in H10.
+subst.
+inversion X10;subst.
+inversion X11;subst.
+inversion H2;subst.
+clear X11 H2 XF5.
+inversion X7;subst.
+inversion X11;subst.
+inversion X12;subst.
+repeat apply inj_pair2 in H10.
+repeat apply inj_pair2 in H14.
+subst.
+unfold b_exec,b_eval,xf_SomeCindex,b_mod in *.
+simpl in *.
+inversion X8;subst.
+inversion X13;subst.
+inversion X15;subst.
+simpl in *.
+inversion X14;subst.
+inversion X16;subst.
+inversion X17;subst.
+assert (Z : S i = i+1). 
+omega.
+rewrite Z.
+auto.
+inversion X18.
+inversion X18.
+inversion X16.
+inversion X13.
+inversion X4;subst.
+inversion X5.
+inversion X5.
+inversion X4.
+inversion X54.
+inversion X52.
+inversion X49.
+inversion X47.
+inversion X44.
+inversion X41.
+inversion X38.
+inversion X33.
+inversion X30.
+inversion X26.
+inversion X18.
+inversion X15.
+inversion X12.
+inversion X9.
+inversion X5.
+inversion X2.
+inversion X103.
+inversion X94.
+inversion X93;subst.
+inversion X94.
+inversion X94.
+inversion X93.
+inversion X89.
+inversion X78.
+inversion X75;subst.
+inversion X76.
+inversion X76.
+inversion X75.
+inversion X71.
+inversion X68.
+inversion X66.
+inversion X62.
+inversion X56.
+inversion X52.
+inversion X44.
+inversion X41;subst.
+inversion X42.
+inversion X42.
+inversion X41.
+inversion X39.
+inversion X36.
+inversion X34.
+inversion X32.
+inversion X26.
+inversion X24.
+repeat apply inj_pair2 in H6.
+rewrite H in H6; inversion H6.
+rewrite H in X21; inversion X21.
+inversion X18.
+inversion X9.
+inversion X7.
+Qed.
+*)

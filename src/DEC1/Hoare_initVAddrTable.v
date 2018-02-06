@@ -1,3 +1,8 @@
+(* Mohamed Sami Cherif, with Narjes Jomaa and Paolo Torrini
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* verification of the initVAddrTable invariant *)
+
 Require Export EnvLibA.
 Require Export RelLibA.
 Require Export PRelLibA.
@@ -90,8 +95,8 @@ Apply
 (QF  (FC emptyE [("x",Index)] (Val (cst unit tt)) (initVAddrTableAux "initVAddrTable" "x" p) "initVAddrTable" tableSize))
 (PS[Val (cst index i)]).
 
-(******* Useful Lemmas *)
 
+(******* Useful Lemmas *)
 
 Lemma removeDupIdentity  (l :  list (paddr * value)) : 
 forall table1 idx1 table2 idx2 , table1 <> table2 \/ idx1 <> idx2 -> 
@@ -160,7 +165,8 @@ intros.
 contradiction.
 Qed.
 
-(******* Hoare Triple *)
+
+(******* Main Hoare Triple *)
 
 Lemma initVAddrTableNewProperty table (curidx : index) (fenv: funEnv) (env: valEnv) :
 {{ fun s => (forall idx : index, idx < curidx -> 
@@ -512,8 +518,6 @@ subst.
 assumption.
 (** end *)
 Qed.
-
-
 
 
 End Hoare_Test_SndShadow.

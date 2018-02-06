@@ -1,3 +1,5 @@
+(* Narjes Jomaa and David Nowak, 
+   Pip code refactored by Mohamed Sami Cherif *)
 Require Import Lib Pip_state Pip_stateLib List.
 Require Import  Omega List Coq.Logic.ProofIrrelevance.
 Import List.ListNotations. 

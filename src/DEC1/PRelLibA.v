@@ -1,3 +1,9 @@
+(* Paolo Torrini, 
+   Universite' Lille-1 
+*)
+(* library of auxiliary functions on relations in Prop, lists and
+environments *)
+
 Require Import Coq.Lists.List.
 Require Import Omega.
 Require Import Coq.Logic.ProofIrrelevance.

@@ -1,3 +1,5 @@
+(* Narjes Jomaa and David Nowak, 
+   Pip code refactored by Mohamed Sami Cherif *)
 (** * Summary 
     This file contains required lemmas to help in proving some properties
     on our dependent types defined into [Model.ADT] *)

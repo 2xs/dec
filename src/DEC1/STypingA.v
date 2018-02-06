@@ -1,3 +1,8 @@
+(* DEC1 language development.
+   Paolo Torrini, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* type uniqueness *)
 
 Require Export Basics.
 
@@ -164,16 +169,6 @@ Proof.
   auto.
 Defined.  
   
-(*
-Lemma ListStrongTyping (ftenv: funTC) (tenv: valTC) (fenv: funEnv) :
-  forall (ls: list Exp) (ts1: list VTyp),   
-      Forall2T (ExpTyping ftenv tenv fenv) ls ts1 -> 
-  forall ts2: list VTyp,  
-      Forall2T (ExpTyping ftenv tenv fenv) ls ts2 -> 
-        ts1 = ts2.
-Proof.
-*)
-
 
 Definition UniEType :=
   fun (ftenv: funTC) (tenv: valTC) (fenv: funEnv)
@@ -370,9 +365,7 @@ eapply ExpTypingUni_rect.
   +
     inversion X; subst.
     rewrite H0 in H4.
-    (*inversion X2; subst.
-    inversion X8; subst. *)
-    
+   
 (***)    
     assert (f0 = FC fenv fps e0 e1 x0 0).
     eapply (envAppendCompare FunTyping ls0 ls8 ls1 ls3). 
@@ -402,8 +395,6 @@ eapply ExpTypingUni_rect.
     
   + inversion X; subst.
     rewrite H0 in H4.
-    (* inversion X2; subst. 
-    inversion X9; subst. *)
 
     assert (f0 = FC fenv fps e0 e1 x0 (S n0)).
     eapply (envAppendCompare FunTyping ls0 ls8 ls1 ls3). 
@@ -695,8 +686,6 @@ eapply PrmsTypingUni_rect.
   +
     inversion X; subst.
     rewrite H0 in H4.
-    (*inversion X2; subst.
-    inversion X8; subst. *)
     
 (***)    
     assert (f0 = FC fenv fps e0 e1 x0 0).
@@ -727,8 +716,6 @@ eapply PrmsTypingUni_rect.
     
   + inversion X; subst.
     rewrite H0 in H4.
-    (* inversion X2; subst. 
-    inversion X9; subst. *)
 
     assert (f0 = FC fenv fps e0 e1 x0 (S n0)).
     eapply (envAppendCompare FunTyping ls0 ls8 ls1 ls3). 
@@ -1019,8 +1006,6 @@ eapply QFunTypingUni_rect.
   +
     inversion X; subst.
     rewrite H0 in H4.
-    (*inversion X2; subst.
-    inversion X8; subst. *)
     
 (***)    
     assert (f0 = FC fenv fps e0 e1 x0 0).
@@ -1051,8 +1036,6 @@ eapply QFunTypingUni_rect.
     
   + inversion X; subst.
     rewrite H0 in H4.
-    (* inversion X2; subst. 
-    inversion X9; subst. *)
 
     assert (f0 = FC fenv fps e0 e1 x0 (S n0)).
     eapply (envAppendCompare FunTyping ls0 ls8 ls1 ls3). 
@@ -1341,8 +1324,6 @@ eapply FunTypingUni_rect.
   +
     inversion X; subst.
     rewrite H0 in H4.
-    (*inversion X2; subst.
-    inversion X8; subst. *)
     
 (***)    
     assert (f0 = FC fenv fps e0 e1 x0 0).
@@ -1373,8 +1354,6 @@ eapply FunTypingUni_rect.
     
   + inversion X; subst.
     rewrite H0 in H4.
-    (* inversion X2; subst. 
-    inversion X9; subst. *)
 
     assert (f0 = FC fenv fps e0 e1 x0 (S n0)).
     eapply (envAppendCompare FunTyping ls0 ls8 ls1 ls3). 

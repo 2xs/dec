@@ -1,3 +1,8 @@
+(* Paolo Torrini and Mohamed Sami Cherif, 
+   Universite' Lille-1 - CRIStAL-CNRS
+*)
+(* Hoare logic for DEC1 *)
+
 Require Export EnvLibA.
 Require Export RelLibA.
 Require Export PRelLibA.
@@ -9,11 +14,6 @@ Require Import Omega.
 Require Import Coq.Lists.List.
 
 Require Import Coq.Logic.ProofIrrelevance.
-
-(*
-Require Import Coq.Strings.String.
-Require Import Coq.Logic.EqdepFacts.
-*)
 
 Require Import StaticSemA.
 Require Import DynamicSemA.
@@ -38,9 +38,6 @@ Definition WP := IdT.WP.
 Module HoareI := Hoare IdT.
 Export HoareI.
 
-(*
-Open Scope string_scope.
-*)
 Import ListNotations.
 
 
@@ -161,16 +158,6 @@ Definition IHoarePrmsTriple_Eval
 
 (*************************************************************************)
 
-(*
-Lemma THoare_weaken (P : W -> Prop) (Q : Value -> W -> Prop)
-           (fenv fenv': funEnv) (env env': valEnv)
-           (e: Exp) :  
-  THoareTriple_Eval P Q (fenv++fenv') (env++env') e ->
-  THoareTriple_Eval P Q fenv env e.
-  unfold THoareTriple_Eval.
-  intros.
-*)  
-  
 
 Lemma BindN_VHTT1 (P0 P1: W -> Prop) (P2: Value -> W -> Prop)
       (fenv: funEnv) (env: valEnv)
@@ -570,6 +557,7 @@ Qed.
 
 (****** Hoare logic notation ***************************************)
 
+
 Notation "{{ P }} fenv >> env >> e {{ Q }}" :=
   (THoareTriple_Eval P Q fenv env e ) (at level 90) : state_scope.
 
@@ -713,171 +701,4 @@ Qed.
 
 
 End THoare.
-
-(*
-
-Lemma Fun_VHT_unpack (P1: list Value -> W -> Prop)
-                 (P2: Value -> W -> Prop)  
-   (fenv: funEnv) (env: valEnv) (f: Fun) : 
-  (forall env, THoareFunTriple_Eval (P1 (map snd env)) P2 fenv env (QF f)) ->  
-  match f with
-  | FC fenv' tenv' e0 e1 x n => 
-(*    length tenv' = length es /\  *)   
-    match n with
-    | 0 => (forall vs: list Value,  
-          THoareTriple_Eval (P1 vs) P2 fenv' (mkVEnv tenv' vs) e0)
-    | S n' => (forall vs: list Value,
-          THoareTriple_Eval (P1 vs) P2 ((x,FC fenv' tenv' e0 e1 x n')::fenv')
-                           (mkVEnv tenv' vs) e1)
-    end
-  end.            
-Proof.
-  unfold THoareFunTriple_Eval, THoareTriple_Eval.
-  intros.
-  destruct f.
-  destruct n.
-  intros.
-  
-
-
-Lemma Apply_VHTT2 (P0: W -> Prop) (P1: list Value -> W -> Prop)
-                 (P2: Value -> W -> Prop)  
-   (fenv: funEnv) (env: valEnv) (f: Fun) (es: list Exp) : 
-  THoarePrmsTriple_Eval P0 P1 fenv env (PS es) ->
-  (forall env, THoareFunTriple_Eval (P1 (map snd env)) P2 fenv env (QF f)) ->  
-  THoareTriple_Eval P0 P2 fenv env (Apply (QF f) (PS es)).
-Proof.
-  unfold THoareFunTriple_Eval, THoareTriple_Eval.
-  intros.
-
-  inversion k3; subst.
-  
-  specialize (H0 env ftenv k1 (FT fps t) X1 s s f).
-  
-  
-
-
-
-Lemma QFun_VHTT2 (P1: W -> Prop) (P2: Value -> W -> Prop)
-      (fenv: funEnv) (env: valEnv) (x: Id) (f: Fun) (es: list Exp) :  
-  findET fenv x f ->
-  THoareTriple_Eval P1 P2 fenv env (Apply (FVar x) (PS es)) ->
-  THoareTriple_Eval P1 P2 fenv env (Apply (QF f) (PS es)).
-Proof.  
-  unfold THoareTriple_Eval.
-  intros.
-
-  inversion k3; subst.
-  inversion X2; subst.
-  
-  eapply H.
-  eauto.
-  eauto.
-  instantiate (1:= t).
-  econstructor.
-  reflexivity.
-  auto.
-  instantiate (1:=fps).
-  econstructor.
-  inversion X; subst.
-
-  assert (exists ls1 ls2, findE ls1 x = None /\
-                          fenv = ls1 ++ ((x,f) :: ls2)).
-  {- eapply findE_Some in H1.
-     auto.
-  }   
-
-  assert (sigT2 (findET ftenv x) (fun t: FTyp => FunTyping f t)).
-  {- eapply ExRelValT1.
-     eassumption.
-     assumption.
-  }  
-  destruct X5 as [ft Z1 Z2].
-  inversion Z1; subst.
-  
-  assert (exists ls1 ls2, findE ls1 x = None /\
-                          ftenv = ls1 ++ ((x,ft) :: ls2)).
-  {- eapply findE_Some in H3.
-     auto.
-  }   
-
-  instantiate (1:=f).
-  econstructor.
-  auto.
-
-  (******)
-  Focus 4. 
-  inversion X; subst.
-  destruct fenv.
-  simpl in H1.
-  inversion H1.
-  simpl.
-  
- 
-  
-  assert (sigT2 (findET ftenv x) (fun t: FTyp => FunTyping f t)).
-  eapply ExRelValT1.
-  eassumption.
-  assumption.
-  destruct X1 as [ft Z1 Z2].
-  
-  inversion k3; subst.  
-  inversion X2; subst.
-
-(*  eapply MatchEnvs2BT_find1 in X4.
-  destruct X4 as [Z3 Z4].
-*)
-  destruct ft.
-
-  inversion Z2; subst.
-  inversion X4; subst.
-  rewrite H1 in H2.
-  inversion H2; subst.
-  
-
-
-  eapply H.
-  eauto.
-  eauto.
-  instantiate (1:= t).
-  econstructor.
-  reflexivity.
-  auto.
-  
-   
- 
-Lemma Apply_VHTT2 (P0: W -> Prop) (P1: list Value -> W -> Prop)
-                 (P2: Value -> W -> Prop)  
-   (fenv: funEnv) (env: valEnv) (qf: QFun) (es: list Exp) : 
-  THoarePrmsTriple_Eval P0 P1 fenv env (PS es) ->
-  (forall env, THoareFunTriple_Eval (P1 (map snd env)) P2 fenv env qf) ->  
-  THoareTriple_Eval P0 P2 fenv env (Apply qf (PS es)).
-Proof.
-  unfold THoareTriple_Eval, THoareFunTriple_Eval.
-  intros.
-  
-  
-Admitted.
-
-Lemma Apply_VHTT3 (P0: W -> Prop) (P1: list Value -> W -> Prop)
-                 (P2: Value -> W -> Prop)
-   (fenv: funEnv) (env: valEnv) fname f (es: list Exp)  :
-   THoarePrmsTriple_Eval P0 P1 fenv env (PS es) ->
-   findET fenv fname f->
-   forall vs , THoareTriple_Eval (P1 vs) P2 fenv env
-                                 (Apply (QF f) (PS (map Val vs)))  ->
-   THoareTriple_Eval P0 P2 fenv env (Apply (FVar fname) (PS es)).
-Proof.
-Admitted.
-
-Lemma BindMS_VHTT1 (P1: W -> Prop)
-                 (P2: Value -> W -> Prop) 
-   (fenv fenv': funEnv) (env env': valEnv) e :
-          THoareTriple_Eval P1 P2 (fenv'++fenv) (env'++env) e ->
-          THoareTriple_Eval P1 P2 fenv env (BindMS fenv' env' e).
-
-Admitted.
-
-*)
-
 

@@ -1,3 +1,5 @@
+(* Narjes Jomaa and David Nowak, 
+   Pip code refactored by Mohamed Sami Cherif *)
 Require Import Lib Pip_state Pip_stateLib Pip_Prop  Pip_DependentTypeLemmas Pip_InternalLemmas.
 Require Import List Coq.Logic.ProofIrrelevance Omega List Bool Classical_Prop.
 Import List.ListNotations. 
