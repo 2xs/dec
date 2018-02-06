@@ -51,9 +51,9 @@ Contributors: Cherif (main), Jomaa, Torrini
 * case study proofs:
      Hoare_getFstShadow.v, Hoare_writeVirtualInv.v, Hoare_initVAddrTable.v
 
-## Imported from Pip
+## Case study: modules imported from Pip
 
-see https://github.com/2xs/pipcore
+refactoring of code from https://github.com/2xs/pipcore
 
 Contributors: Jomaa (main), Nowak, refactored by Cherif
 
