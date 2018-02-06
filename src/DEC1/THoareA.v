@@ -568,6 +568,150 @@ Lemma Modify_VHTT1 (P: Value -> W -> Prop)
 Qed.  
 
 
+(****** Hoare logic notation ***************************************)
+
+Notation "{{ P }} fenv >> env >> e {{ Q }}" :=
+  (THoareTriple_Eval P Q fenv env e ) (at level 90) : state_scope.
+
+Notation "{{ P }}' fenv >> env >> ps {{ Q }}'" :=
+  (THoarePrmsTriple_Eval P Q fenv env ps ) (at level 90) : state_scope.
+
+Open Scope state_scope.
+
+
+
+Definition wp (P : Value -> W -> Prop)
+           (fenv: funEnv) (env: valEnv) (e : Exp) :
+      W -> Prop := fun s => forall (v:Value) (s': W),
+EClosure fenv env (Conf Exp s e) (Conf Exp s' (Val v)) -> P v s'.
+
+Lemma wpIsPrecondition (P : Value -> W -> Prop)
+      (fenv: funEnv) (env: valEnv) (e : Exp) :
+  {{ wp P fenv env e }} fenv >> env >> e {{ P }}.
+Proof.
+unfold THoareTriple_Eval.
+intros ftenv tenv k1 k2 t k3 s s' v H1 H2.
+unfold wp in H2.
+eapply H2.
+auto.
+Qed.
+
+Lemma weakenEval (P Q : W -> Prop) (R : Value -> W -> Prop)
+                  (fenv: funEnv) (env: valEnv) (e : Exp) :
+  {{ Q }} fenv >> env >> e {{ R }} -> (forall s, P s -> Q s) ->
+  {{ P }} fenv >> env >> e {{ R }}.
+Proof.
+intros.
+unfold THoareTriple_Eval in *.
+intros.
+eapply H;
+eauto.
+Qed.
+
+Definition wpPrms (P : list Value -> W -> Prop)
+                   (fenv: funEnv) (env: valEnv) (ps: Prms):
+  W -> Prop := fun s => forall (vs: list Value) (s': W),
+  PrmsClosure fenv env (Conf Prms s ps) (Conf Prms s' (PS (map Val vs))) ->
+                   P vs s'.
+
+Lemma wpIsPreconditionPrms (P : list Value -> W -> Prop)
+                             (fenv: funEnv) (env: valEnv) (ps: Prms):
+  THoarePrmsTriple_Eval (wpPrms P fenv env ps) P fenv env ps.
+Proof.
+unfold THoarePrmsTriple_Eval.
+intros ftenv tenv k1 k2 t k3 s s' v H1 H2.
+unfold wpPrms in H2.
+eapply H2.
+auto.
+Qed.
+
+Lemma weakenPrms (P Q : W -> Prop) (R : list Value -> W -> Prop)
+                  (fenv: funEnv) (env: valEnv) (ps: Prms):
+  THoarePrmsTriple_Eval Q R fenv env ps ->
+ (forall s, P s -> Q s) -> THoarePrmsTriple_Eval P R fenv env ps .
+Proof.
+intros.
+unfold THoarePrmsTriple_Eval in *.
+intros.
+eapply H;
+eauto.
+Qed.
+
+
+(**********************************************************************)
+
+
+Lemma BindN_HoareRule (P0 P1: W -> Prop) (P2: Value -> W -> Prop)
+        (fenv: funEnv) (env: valEnv)     
+        (e1 e2: Exp) :
+  {{ P0 }} fenv >> env >> e1 {{ fun _ => P1 }} -> 
+  {{ P1 }} fenv >> env >> e2 {{ P2 }} ->
+  {{ P0 }} fenv >> env >> (BindN e1 e2) {{ P2 }}.
+Proof.
+  eapply BindN_VHTT1.
+Qed.
+
+
+Lemma BindS_HoareRule (P0: W -> Prop) (P1 P2: Value -> W -> Prop)
+        (fenv: funEnv) (env: valEnv)     
+        (e1 e2: Exp) (x: Id) :
+  {{ P0 }} fenv >> env >> e1 {{ P1 }} -> 
+  (forall v, {{ P1 v }} fenv >> ((x,v)::env) >> e2 {{ P2 }}) ->
+  {{ P0 }} fenv >> env >> (BindS x e1 e2) {{ P2 }}.
+Proof.
+  eapply BindS_VHTT1.
+Qed.
+
+
+Lemma Apply0_HoareRule (P0: W -> Prop) (P1: list Value -> W -> Prop)
+                 (P2: Value -> W -> Prop)  
+                 (fenv fenv': funEnv) (env: valEnv) (tenv: valTC) (e0 e1: Exp)
+                 (es: list Exp) (x: Id) :
+  length tenv = length es ->
+  {{ P0 }}' fenv >> env >> PS es {{ P1 }}' ->
+  (forall vs, {{ P1 vs }} fenv' >> (mkVEnv tenv vs) >> e0 {{ P2 }}) ->
+  {{ P0 }} fenv >> env >>
+           (Apply (QF (FC fenv' tenv e0 e1 x 0)) (PS es)) {{ P2 }}.
+Proof.
+  generalize (Apply_VHTT1 P0 P1 P2 fenv env (FC fenv' tenv e0 e1 x 0) es).
+  intros.
+  eapply H.
+  auto.
+  auto.
+Qed.  
+
+
+Lemma Apply1_HoareRule (P0: W -> Prop) (P1: list Value -> W -> Prop)
+                 (P2: Value -> W -> Prop)  
+                 (fenv fenv': funEnv) (env: valEnv) (tenv: valTC) (e0 e1: Exp)
+                 (es: list Exp) (x: Id) (n: nat) :
+  length tenv = length es ->
+  {{ P0 }}' fenv >> env >> PS es {{ P1 }}' ->
+  (forall vs, {{ P1 vs }} (x, FC fenv' tenv e0 e1 x n)::fenv' >>
+                          (mkVEnv tenv vs) >> e1 {{ P2 }}) ->
+  {{ P0 }} fenv >> env >>
+           (Apply (QF (FC fenv' tenv e0 e1 x (S n))) (PS es)) {{ P2 }}.
+Proof.
+  generalize (Apply_VHTT1 P0 P1 P2 fenv env (FC fenv' tenv e0 e1 x (S n)) es).
+  intros.
+  eapply H.
+  auto.
+  auto.
+Qed.  
+
+
+Lemma Modify_HoareRule (P: Value -> W -> Prop) 
+        (fenv: funEnv) (env: valEnv)     
+        (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
+        (XF: XFun T1 T2) (v: T1) :
+ {{ fun s => P (cst T2 (b_eval T1 T2 XF s v))
+               ((b_exec T1 T2 XF s v)) }} fenv >> env >>
+        (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))) {{ P }}.
+Proof.
+  eapply Modify_VHTT1.
+Qed.
+
+
 End THoare.
 
 (*

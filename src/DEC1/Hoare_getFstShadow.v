@@ -41,8 +41,11 @@ Definition WP := FstShadow.WP.
 
 (**************************************************)
 
-(****** Hoare logic *)
+Open Scope state_scope.
 
+
+(****** Hoare logic *)
+(*
 Notation "{{ P }} fenv >> env >> e {{ Q }}" := (THoareTriple_Eval P Q fenv env e ) 
 (at level 90) : state_scope.
 
@@ -98,6 +101,8 @@ intros.
 eapply H;
 eauto.
 Qed.
+
+*)
 
 (******* Program *)
 
