@@ -8,13 +8,19 @@ verification of Pip invariants.
 
 DEC 1.0 language development, implemented in Coq 8.6.
 
-## Language development [contributors: Torrini (main), Nowak]
+## Building the project
+
+  run 'make'
+
+## Language development
+
+Contributors: Torrini (main), Nowak
 
 * auxiliary libraries: EnvLibA.v, RelLibA, PRelLibA.v
 
 * module type: IdModTypeA.v
 
-* static semantics: StaticSemA.v, TRinduct.v
+* syntax and static semantics: StaticSemA.v, TRinduct.v
 
 * dynamic semantics: DynamicSemA.v
 
@@ -22,30 +28,41 @@ DEC 1.0 language development, implemented in Coq 8.6.
 
 * DEC libraries: AbbrevA.v, InvertA,v, DECauxB.v
 
-* extraction: Extraction.v [Nowak]
+## Code extraction
 
-## Hoare logic: HoareA.v, THoareA.v [contributors: Torrini (main), Cherif]
+Contributors: Nowak (main), Torrini
 
-## Case study [contributors: Cherif (main), Torrini]
+* Extraction.v
+
+## Hoare logic: 
+
+Contributors: Torrini (main), Cherif
+
+* HoareA.v, THoareA.v
+
+## Case study
+
+Contributors: Cherif (main), Jomaa, Torrini
 
 * module: IdModPip.v
 
 * case study proofs:
      Hoare_getFstShadow.v, Hoare_writeVirtualInv.v, Hoare_initVAddrTable.v
 
-## modules imported from Pip [contributors: Jomaa (main), Nowak; refactored by Cherif]:
-     Lib.v, Pip_DependentTypeLemmas.v, Pip_InternalLemmas.v, Pip_Prop.v,
-     Pip_stateLib.v, Pip_writeVirtualInv_Lemmas.v
+## modules imported from Pip
 
-## Testing [contributors: Torrini, Nowak, Cherif]
+Contributors: Jomaa (main), Nowak, refactored by Cherif
+
+* Lib.v, Pip_DependentTypeLemmas.v, Pip_InternalLemmas.v, Pip_Prop.v,
+  Pip_stateLib.v, Pip_writeVirtualInv_Lemmas.v
+
+## Testing
+
+Contributors: Torrini, Cherif, Nowak
 
 * modules: ModNat1A.v, ModLEnvA.v, ModNEnvA.v
 
 * test functions: Test_Nat1A.v, TestLEnvA.v, Test_Convert.v
-
-## Building the full project
-
-  run 'make'
 
 ## Contributors
 
