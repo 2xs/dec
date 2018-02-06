@@ -20,7 +20,7 @@ DEC 1.0 language specification, implemented in Coq 8.6.
 * src/DEC1: full language development with proofs 
             and case study on the verification of Pip invariants
   
-  (ITP 2018 submission: go to src/DEC1/README.md)
+  (ITP 2018 submission: see src/DEC1/README.md)
 
 ## Coq modules in src/langspec
 
@@ -40,7 +40,7 @@ DEC 1.0 language specification, implemented in Coq 8.6.
 
 ## Information on modules in src/DEC1
 
-   go to src/DEC1/README.md
+   see src/DEC1/README.md
 
 ## Building the language specification
 
@@ -51,7 +51,7 @@ DEC 1.0 language specification, implemented in Coq 8.6.
 
 ## Building the full language inclusive of case study and tests
 
-  go to src/DEC1/README.md and run 'make'
+  go to src/DEC1/ and run 'make'
 
 ## Contributors
 
