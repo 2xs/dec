@@ -1,8 +1,8 @@
 
 ## Synopsis
 
-This projects contains the development of DEC, and a case study on the
-verification of Pip invariants.
+This projects contains the full development of DEC, and a case study
+on the verification of Pip invariants.
 
 ## Version
 
@@ -38,7 +38,9 @@ Contributors: Nowak (main), Torrini
 
 Contributors: Torrini (main), Cherif
 
-* HoareA.v, THoareA.v
+* preliminary: HoareA.v
+
+* typed: THoareA.v
 
 ## Case study
 
@@ -49,7 +51,9 @@ Contributors: Cherif (main), Jomaa, Torrini
 * case study proofs:
      Hoare_getFstShadow.v, Hoare_writeVirtualInv.v, Hoare_initVAddrTable.v
 
-## modules imported from Pip
+## Imported from Pip
+
+see https://github.com/2xs/pipcore
 
 Contributors: Jomaa (main), Nowak, refactored by Cherif
 
