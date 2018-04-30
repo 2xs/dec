@@ -20,7 +20,7 @@ DEC 1.0 language specification, implemented in Coq 8.6.
 * src/DEC1: full language development with proofs 
             and case study on the verification of Pip invariants
   
-## ITP 2018 submission
+## VSTTE 2018 submission
 
 see src/DEC1/README.md
 
