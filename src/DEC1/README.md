@@ -24,7 +24,7 @@ Contributors: Torrini (main), Nowak
 
 * dynamic semantics: DynamicSemA.v
 
-* main proofs: WeakenA.v, SReducA.v, TSoundnessA.V, DetermA.v, STypingA.v
+* main proofs and interpreter: WeakenA.v, SReducA.v, TSoundnessA.V, DetermA.v, STypingA.v, SOS2GallinaB.v
 
 * DEC libraries: AbbrevA.v, InvertA,v, DECauxB.v
 

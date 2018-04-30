@@ -489,7 +489,7 @@ Proof.
 Qed.  
   
 
-Lemma IfTheElse_VHTT1 (P0: W -> Prop) (P1 P2: Value -> W -> Prop) 
+Lemma IfThenElse_VHTT1 (P0: W -> Prop) (P1 P2: Value -> W -> Prop) 
         (fenv: funEnv) (env: valEnv)     
         (e1 e2 e3: Exp) :
   THoareTriple_Eval P0 P1 fenv env e1 ->
@@ -698,6 +698,34 @@ Lemma Modify_HoareRule (P: Value -> W -> Prop)
 Proof.
   eapply Modify_VHTT1.
 Qed.
+
+
+
+(***********************************************************************)
+
+Ltac HoareTac :=
+  match goal with
+  | [ |- THoareTriple_Eval ?P0 ?P1 ?fenv ?env ?e ] =>                
+    match e with
+    | BindN ?e1 ?e2 => eapply (BindN_VHTT2 P0 _ P1 fenv env e1 e2)
+    | BindS ?x ?e1 ?e2 => eapply (BindS_VHTT1 P0 _ P1 fenv env e1 e2 x)
+    | Apply (FVar ?x) (PS ?es) =>
+      match constr:(findE fenv x) with
+      | Some ?f => eapply (Apply_VHTT3 P0 _ P1 fenv env x f es)
+      | None => fail                   
+      end
+    | Apply (QF ?f) (PS ?es) =>
+        eapply (Apply_VHTT1 P0 _ P1 fenv env f es)
+    | IfThenElse ?e1 ?e2 ?e3 =>
+        eapply (IfThenElse_VHTT1 P0 _ P1 fenv env e1 e2 e3)
+    | _ => fail
+    end  
+  | [ |- THoarePrmsTriple_Eval ?P0 ?P1 ?fenv ?env ?ps ] =>
+    match ps with
+    | PS (?e :: ?es) =>   
+      eapply (Prms_VHTT1 P0 _ P1 fenv env e es)
+    end         
+  end. 
 
 
 End THoare.

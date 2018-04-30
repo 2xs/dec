@@ -166,6 +166,7 @@ contradiction.
 Qed.
 
 
+
 (******* Main Hoare Triple *)
 
 Lemma initVAddrTableNewProperty table (curidx : index) (fenv: funEnv) (env: valEnv) :
@@ -188,7 +189,8 @@ simpl in *.
 omega.
 (** end *)
 intros;simpl.
-eapply Apply_VHTT1.
+(* eapply Apply_VHTT1. *)
+HoareTac1.
 (** begin PS [Val (cst index curidx)] *)
 instantiate (1:= fun vs s => (forall idx : index,
    idx < curidx -> readVirtual table idx (memory s) = Some defaultVAddr) 
@@ -212,7 +214,7 @@ Focus 2.
 unfold THoareTriple_Eval;intros.
 intuition; inversion H2.
 simpl in *.
-(*eapply BindMS_VHTT1.*)
+(*eapply BindN_VHTT1.*)
 eapply BindN_VHTT1.
 (** Begin write Virtual *)
 unfold THoareTriple_Eval.
@@ -279,7 +281,8 @@ auto.
 inversion X5.
 inversion X5.
 (** end *)
-eapply IfTheElse_VHTT1.
+(* eapply IfTheElse_VHTT1.*)
+HoareTac1.
 (** begin LtLtb *)
 unfold THoareTriple_Eval.
 intros.
@@ -312,8 +315,10 @@ inversion X5.
 inversion X5.
 (** end *)
 simpl.
-eapply BindS_VHTT1.
-eapply BindS_VHTT1.
+(* eapply BindS_VHTT1.
+   eapply BindS_VHTT1.
+*)
+repeat HoareTac1.
 (** begin SuccD *)
 eapply weakenEval.
 instantiate (2:= fun s => (fun s' => (forall idx : index,
@@ -382,7 +387,8 @@ intros; simpl.
 eapply QFun_VHTT.
 econstructor.
 econstructor.
-eapply Apply_VHTT2.
+eapply Apply_VHTT2. 
+(* HoareTac1. *)
 instantiate(1:=fun vs s => (forall idx : index,
     idx < curidx -> readVirtual table idx (memory s) = Some defaultVAddr) /\
    readVirtual table curidx (memory s) = Some defaultVAddr /\

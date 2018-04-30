@@ -48,6 +48,7 @@ Definition WP := FstShadow.WP.
 
 Open Scope state_scope.
 
+
 (******* Program *)
 
 (** getSh1idx : returns first shadow *)
@@ -549,7 +550,8 @@ intuition.
 inversion X6.
 inversion X6.
 intros; simpl.
-eapply IfTheElse_VHTT1.
+(* eapply IfThenElse_VHTT1. *)
+HoareTac.
 (** LtDec *)
 unfold THoareTriple_Eval.
 intros.
@@ -1135,18 +1137,27 @@ Qed.
 
 (******* Hoare Triple *)
 
+
+Ltac HoareTac1 :=
+  unfold ReadPhysicalQF; unfold SuccQF; HoareTac.
+
+
 (* For Bind Approach *)
 
-Lemma getFstShadowBindH (partition : page) (P : W -> Prop) (fenv: funEnv) (env: valEnv) :
-{{fun s => P s  /\ partitionDescriptorEntry s /\ In partition (getPartitions multiplexer s)}}
-fenv >> env >> (getFstShadowBind partition) 
+Lemma getFstShadowBindH (partition : page) (P : W -> Prop)
+      (fenv: funEnv) (env: valEnv) :
+{{fun s => P s  /\ partitionDescriptorEntry s /\
+             In partition (getPartitions multiplexer s)}}
+  fenv >> env >> (getFstShadowBind partition) 
 {{fun sh1 s => P s /\ nextEntryIsPP partition sh1idx sh1 s}}.
 Proof.
 unfold getFstShadowBind.
-eapply BindS_VHTT1.
+(* eapply BindS_VHTT1. *)
+HoareTac1.
 eapply getSh1idxWp.
 simpl; intros.
-eapply BindS_VHTT1.
+(* eapply BindS_VHTT1. *)
+HoareTac1.
 eapply weakenEval.
 eapply succWp. simpl.
 simpl; intros; intuition.
@@ -1186,22 +1197,27 @@ apply inj_pairT2 in H5.
 inversion H5.
 auto.
 unfold isVA in H4.
-destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;try contradiction.
+destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;
+  try contradiction.
 auto.
 Qed.
 
 (* For Bind Approach with Deep successor function *)
 
-Lemma getFstShadowBindDeepH (partition : page) (P : W -> Prop) (fenv: funEnv) (env: valEnv) :
-{{fun s => P s  /\ partitionDescriptorEntry s /\ In partition (getPartitions multiplexer s)}}
-fenv >> env >> (getFstShadowBindDeep partition) 
+Lemma getFstShadowBindDeepH (partition : page) (P : W -> Prop)
+      (fenv: funEnv) (env: valEnv) :
+{{fun s => P s  /\ partitionDescriptorEntry s /\
+             In partition (getPartitions multiplexer s)}}
+  fenv >> env >> (getFstShadowBindDeep partition) 
 {{fun sh1 s => P s /\ nextEntryIsPP partition sh1idx sh1 s}}.
 Proof.
 unfold getFstShadowBindDeep.
-eapply BindS_VHTT1.
+(* eapply BindS_VHTT1. *)
+HoareTac1.
 eapply getSh1idxWp.
 simpl; intros.
-eapply BindS_VHTT1.
+(* eapply BindS_VHTT1. *)
+HoareTac1.
 eapply weakenEval.
 eapply succDWp. simpl.
 simpl; intros; intuition.
@@ -1241,22 +1257,29 @@ apply inj_pairT2 in H5.
 inversion H5.
 auto.
 unfold isVA in H4.
-destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;try contradiction.
+destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;
+  try contradiction.
 auto.
 Qed.
 
+
+
 (*Bind approach & Deep definition of Succ with recursive plus function*) 
 
-Lemma getFstShadowBindDeepRecH (partition : page) (P : W -> Prop) (fenv: funEnv) (env: valEnv) :
-{{fun s => P s  /\ partitionDescriptorEntry s /\ In partition (getPartitions multiplexer s)}}
-fenv >> env >> (getFstShadowBindDeepRec partition) 
+Lemma getFstShadowBindDeepRecH (partition : page) (P : W -> Prop)
+      (fenv: funEnv) (env: valEnv) :
+{{fun s => P s  /\ partitionDescriptorEntry s /\
+             In partition (getPartitions multiplexer s)}}
+   fenv >> env >> (getFstShadowBindDeepRec partition) 
 {{fun sh1 s => P s /\ nextEntryIsPP partition sh1idx sh1 s}}.
 Proof.
-unfold getFstShadowBindDeep.
-eapply BindS_VHTT1.
+unfold getFstShadowBindDeepRec.
+(* eapply BindS_VHTT1. *)
+HoareTac1.
 eapply getSh1idxWp.
 simpl; intros.
-eapply BindS_VHTT1.
+(* eapply BindS_VHTT1. *)
+HoareTac1.
 eapply weakenEval.
 eapply succRecWp. simpl.
 simpl; intros; intuition.
@@ -1291,163 +1314,175 @@ unfold nextEntryIsPP in H5.
 rewrite H3 in H5.
 destruct (lookup partition x (memory s) beqPage beqIndex).
 unfold cst in H5.
-destruct v0;try contradiction.
+destruct v0; try contradiction.
 apply inj_pairT2 in H5.
 inversion H5.
 auto.
 unfold isVA in H4.
-destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;try contradiction.
+destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;
+  try contradiction.
 auto.
 Qed.
 
 (* For Apply Approach *)
 
-Lemma getFstShadowApplyH (partition : page) (P : W -> Prop) (fenv: funEnv) (env: valEnv) :
-{{fun s => P s  /\ partitionDescriptorEntry s /\ In partition (getPartitions multiplexer s)}}
-fenv >> env >> (getFstShadowApply partition) 
+Lemma getFstShadowApplyH (partition : page) (P : W -> Prop)
+      (fenv: funEnv) (env: valEnv) :
+{{fun s => P s  /\ partitionDescriptorEntry s /\
+             In partition (getPartitions multiplexer s)}}
+  fenv >> env >> (getFstShadowApply partition) 
 {{fun sh1 s => P s /\ nextEntryIsPP partition sh1idx sh1 s}}.
 Proof.
-unfold getFstShadowApply.
-eapply Apply_VHTT1.
-eapply weakenPrms.
-unfold getSh1idx.
-eapply succWp'.
-simpl; intros.
-intuition.
-instantiate (1:=P).
-auto.
-eauto.
-eapply H in H2.
-specialize H2 with sh1idx.
-eapply H2.
-auto.
-intuition.
-eapply weakenEval.
-eapply readPhysicalW'.
-simpl; intros.
-intuition.
-destruct H3.
-exists x.
-unfold partitionDescriptorEntry in H.
-apply H with partition sh1idx in H1.
-clear H.
-intuition.
-destruct H5.
-exists x0.
-intuition.
-unfold nextEntryIsPP in H5.
-unfold readPhysicalInternal.
-rewrite H1 in H5.
-destruct (lookup partition x (memory s) beqPage beqIndex).
-unfold cst in H5.
-destruct v;try contradiction.
-apply inj_pairT2 in H5.
-inversion H5.
-auto.
-unfold isVA in H2.
-destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;try contradiction.
-auto.
+  unfold getFstShadowApply.
+(* eapply Apply_VHTT1. *)
+  HoareTac1.
+  eapply weakenPrms.
+  unfold getSh1idx.
+  eapply succWp'.
+  simpl; intros.
+  intuition.
+  instantiate (1:=P).
+  auto.
+  eauto.
+  eapply H in H2.
+  specialize H2 with sh1idx.
+  eapply H2.
+  auto.
+  intuition.
+  eapply weakenEval.
+  eapply readPhysicalW'.
+  simpl; intros.
+  intuition.
+  destruct H3.
+  exists x.
+  unfold partitionDescriptorEntry in H.
+  apply H with partition sh1idx in H1.
+  clear H.
+  intuition.
+  destruct H5.
+  exists x0.
+  intuition.
+  unfold nextEntryIsPP in H5.
+  unfold readPhysicalInternal.
+  rewrite H1 in H5.
+  destruct (lookup partition x (memory s) beqPage beqIndex).
+  unfold cst in H5.
+  destruct v;try contradiction.
+  apply inj_pairT2 in H5.
+  inversion H5.
+  auto.
+  unfold isVA in H2.
+  destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;
+    try contradiction.
+  auto.
 Qed.
 
-Lemma getFstShadowApplyH' (partition : page) (P : W -> Prop) (fenv: funEnv) (env: valEnv) :
-{{fun s => P s  /\ partitionDescriptorEntry s /\ In partition (getPartitions multiplexer s)}}
-fenv >> env >> (getFstShadowApply partition) 
+
+
+Lemma getFstShadowApplyH' (partition : page) (P : W -> Prop)
+      (fenv: funEnv) (env: valEnv) :
+{{fun s => P s  /\ partitionDescriptorEntry s /\
+             In partition (getPartitions multiplexer s)}}
+  fenv >> env >> (getFstShadowApply partition) 
 {{fun sh1 s => P s /\ nextEntryIsPP partition sh1idx sh1 s}}.
 Proof.
-unfold getFstShadowApply.
-eapply Apply_VHTT1.
-eapply Prms_VHTT1.
-eapply Apply_VHTT1.
-eapply Prms_VHTT1.
-eapply getSh1idxWp.
-intros; unfold THoarePrmsTriple_Eval; intros;simpl.
-inversion X;subst.
-destruct vs; inversion H5.
-instantiate (1:= fun vs s => P s /\ partitionDescriptorEntry s /\
+  unfold getFstShadowApply.
+(* eapply Apply_VHTT1.
+   eapply Prms_VHTT1.
+   eapply Apply_VHTT1.
+   eapply Prms_VHTT1.
+*)
+  repeat HoareTac1.
+  eapply getSh1idxWp.
+  instantiate (1:= fun vs s => P s /\ partitionDescriptorEntry s /\
      In partition (getPartitions multiplexer s) /\ vs = [cst index sh1idx]).
-intuition. f_equal. auto.
-inversion X0.
-intuition.
-destruct vs.
-unfold THoareTriple_Eval; intros.
-intuition. inversion H3.
-destruct vs.
-Focus 2.
-unfold THoareTriple_Eval; intros.
-intuition. inversion H3.
-unfold mkVEnv. simpl.
-eapply weakenEval.
-eapply succWp.
-simpl; intros. 
-instantiate (1:= sh1idx).
-instantiate (1:= fun s => P s /\
+  intros; unfold THoarePrmsTriple_Eval; intros; simpl.
+  inversion X; subst.
+  destruct vs; inversion H5.
+  intuition. f_equal. auto.
+  inversion X0.
+  intuition.
+  destruct vs.
+  unfold THoareTriple_Eval; intros.
+  intuition. inversion H3.
+  destruct vs.
+  Focus 2.
+  unfold THoareTriple_Eval; intros.
+  intuition. inversion H3.
+  unfold mkVEnv. simpl.
+  eapply weakenEval.
+  eapply succWp.
+  simpl; intros. 
+  instantiate (1:= sh1idx).
+  instantiate (1:= fun s => P s /\
     partitionDescriptorEntry s /\
     In partition (getPartitions multiplexer s)).
-simpl. intuition.
-eapply H in H1.
-specialize H1 with sh1idx.
-eapply H1.
-auto.
-inversion H3; intuition.
-intros; simpl.
-unfold THoarePrmsTriple_Eval; intros.
-inversion X; subst.
-destruct vs; inversion H5.
-instantiate (1:= fun vs s => P s /\ partitionDescriptorEntry s /\
+  simpl. intuition.
+  eapply H in H1.
+  specialize H1 with sh1idx.
+  eapply H1.
+  auto.
+  inversion H3; intuition.
+  intros; simpl.
+  unfold THoarePrmsTriple_Eval; intros.
+  inversion X; subst.
+  destruct vs; inversion H5.
+  instantiate (1:= fun vs s => P s /\ partitionDescriptorEntry s /\
      In partition (getPartitions multiplexer s) 
      /\ (exists i : index,
      succIndexInternal sh1idx = Some i /\ vs = [cst (option index) (Some i)]) 
     ).
-intuition.
-destruct H3.
-exists x.
-intuition.
-rewrite H0 in H2.
-inversion H2; subst.
-repeat apply inj_pair2 in H6.
-auto.
-f_equal.
-auto.
-inversion X0.
-intuition.
-destruct vs.
-unfold THoareTriple_Eval; intros.
-destruct H as [a [b [c d]]].
-destruct d. destruct H.
-inversion H0.
-destruct vs.
-Focus 2.
-unfold THoareTriple_Eval; intros.
-destruct H as [a [b [c d]]].
-destruct d. destruct H.
-inversion H0.
-unfold mkVEnv; simpl.
-eapply weakenEval.
-eapply readPhysicalW.
-simpl; intros.
-intuition.
-destruct H3.
-exists x.
-unfold partitionDescriptorEntry in H.
-apply H with partition sh1idx in H1.
-clear H.
-intuition.
-destruct H5.
-exists x0.
-intuition.
-inversion H4;subst. auto.
-unfold nextEntryIsPP in H5.
-unfold readPhysicalInternal.
-rewrite H1 in H5.
-destruct (lookup partition x (memory s) beqPage beqIndex).
-destruct v0;try contradiction.
-unfold cst in H5.
-apply inj_pairT2 in H5.
-inversion H5.
-auto.
-unfold isVA in H2.
-destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;try contradiction.
-auto.
+  intuition.
+  destruct H3.
+  exists x.
+  intuition.
+  rewrite H0 in H2.
+  inversion H2; subst.
+  repeat apply inj_pair2 in H6.
+  auto.
+  f_equal.
+  auto.
+  inversion X0.
+  intuition.
+  destruct vs.
+  unfold THoareTriple_Eval; intros.
+  destruct H as [a [b [c d]]].
+  destruct d. destruct H.
+  inversion H0.
+  destruct vs.
+  Focus 2.
+  unfold THoareTriple_Eval; intros.
+  destruct H as [a [b [c d]]].
+  destruct d. destruct H.
+  inversion H0.
+  unfold mkVEnv; simpl.
+  eapply weakenEval.
+  eapply readPhysicalW.
+  simpl; intros.
+  intuition.
+  destruct H3.
+  exists x.
+  unfold partitionDescriptorEntry in H.
+  apply H with partition sh1idx in H1.
+  clear H.
+  intuition.
+  destruct H5.
+  exists x0.
+  intuition.
+  inversion H4;subst. auto.
+  unfold nextEntryIsPP in H5.
+  unfold readPhysicalInternal.
+  rewrite H1 in H5.
+  destruct (lookup partition x (memory s) beqPage beqIndex).
+  destruct v0;try contradiction.
+  unfold cst in H5.
+  apply inj_pairT2 in H5.
+  inversion H5.
+  auto.
+  unfold isVA in H2.
+  destruct (lookup partition sh1idx (memory s) beqPage beqIndex) in H2;
+    try contradiction.
+  auto.
 Qed.
 
 
