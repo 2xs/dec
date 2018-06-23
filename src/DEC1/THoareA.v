@@ -555,6 +555,55 @@ Lemma Modify_VHTT1 (P: Value -> W -> Prop)
 Qed.  
 
 
+Lemma Modify_VHTT2 (P: Value -> W -> Prop) 
+        (fenv: funEnv) (env: valEnv)     
+        (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
+        (XF: XFun T1 T2) (v: T1) (x: Id) :
+  findE env x = Some (cst T1 v) ->
+  THoareTriple_Eval (fun s => P (cst T2 (b_eval T1 T2 XF s v))
+                                ((b_exec T1 T2 XF s v)))
+                    P fenv env (Modify T1 T2 VT1 VT2 XF (Var x)).
+  intro.
+  unfold THoareTriple_Eval.
+  intros.
+  
+  inversion k3; subst.
+  eapply inj_pair2 in H7; subst.
+  eapply inj_pair2 in H7; subst.
+
+  assert (EStep fenv env (Conf Exp s (Modify T1 T2 VT1 VT2 XF (Var x)))
+                (Conf Exp s (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))))) as X1.
+  econstructor.
+  econstructor.
+  econstructor.
+  assumption.
+  
+  assert (EStep fenv env (Conf Exp s (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))))
+  (Conf Exp (b_exec T1 T2 XF s v) (Val (cst T2 (b_eval T1 T2 XF s v))))) as X2.
+  constructor.
+(*  eapply StepIsEClos in X1. *)
+  eapply StepIsEClos in X2.
+
+  assert (EClosure fenv env (Conf Exp s (Modify T1 T2 VT1 VT2 XF (Var x)))
+      (Conf Exp (b_exec T1 T2 XF s v) (Val (cst T2 (b_eval T1 T2 XF s v))))).
+  econstructor.
+  eassumption.
+  assumption.
+  
+  assert (s' = (b_exec T1 T2 XF s v) /\ v0 = (cst T2 (b_eval T1 T2 XF s v))).
+  eapply ExpConfluence.
+  exact k3.
+  auto.
+  eauto.
+  eassumption.
+  assumption.
+  destruct H1.
+  rewrite H1.
+  rewrite H2.
+  assumption.
+Qed.
+
+
 (****** Hoare logic notation ***************************************)
 
 
@@ -697,6 +746,133 @@ Lemma Modify_HoareRule (P: Value -> W -> Prop)
         (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))) {{ P }}.
 Proof.
   eapply Modify_VHTT1.
+Qed.
+
+
+(********************************************************************)
+
+Lemma Hoare_val_eq_wk (P: W -> Prop)
+      (Q: Value -> W -> Prop)
+      (fenv: list Value -> funEnv) (env: list Value -> valEnv) (e: Exp) :
+forall vs1 vs2: list Value,
+{{ fun s => P s }} fenv vs2 >> env vs2 >> e {{fun v s => Q v s }} -> 
+{{ fun s => P s /\ vs1 = vs2 }} fenv vs1 >> env vs1 >> e {{fun v s => Q v s }}. 
+  unfold THoareTriple_Eval.
+  intros.
+  destruct H0.
+  subst.
+  eapply H.
+  eassumption.
+  eassumption.
+  eassumption.
+  eassumption.
+  assumption.
+Qed.
+
+Lemma Hoare_eq_wk (T: Type) (P: W -> Prop)
+      (Q: Value -> W -> Prop)
+      (fenv: T -> funEnv) (env: T -> valEnv) (e: Exp) :
+forall vs1 vs2: T,
+{{ fun s => P s }} fenv vs2 >> env vs2 >> e {{fun v s => Q v s }} -> 
+{{ fun s => P s /\ vs1 = vs2 }} fenv vs1 >> env vs1 >> e {{fun v s => Q v s }}. 
+  unfold THoareTriple_Eval.
+  intros.
+  destruct H0.
+  subst.
+  eapply H.
+  eassumption.
+  eassumption.
+  eassumption.
+  eassumption.
+  assumption.
+Qed.
+
+Lemma Hoare_env_subst (P1 P2: W -> Prop)
+      (Q: Value -> W -> Prop)
+      (fenv: Value -> funEnv) (env: Value -> valEnv) (e: Exp) :
+  forall v1 v2: Value,
+ (forall s, P1 s -> v1 = v2) -> (forall s, P1 s ->  P2 s) ->    
+{{ fun s => P2 s }} fenv v2 >> env v2 >> e {{fun v s => Q v s }} -> 
+{{ fun s => P1 s }} fenv v1 >> env v1 >> e {{fun v s => Q v s }}. 
+  unfold THoareTriple_Eval.
+  intros.
+  specialize (H s H2).
+  specialize (H0 s H2).
+  subst.
+  eapply H1.
+  eassumption.
+  eassumption.
+  eassumption.
+  eassumption.
+  assumption.
+Qed.
+
+
+Lemma THoare_gen (T: Type) (P0: T -> W -> Prop)
+      (P1: T -> Value -> W -> Prop) 
+      (fenv: funEnv) (env: valEnv)     
+      (e: Exp) :
+  (forall t:T, THoareTriple_Eval (P0 t) (P1 t) fenv env e) ->
+  THoareTriple_Eval (fun s => forall t:T, P0 t s)
+                    (fun s v => forall t:T, P1 t s v) fenv env e.
+  unfold THoareTriple_Eval.
+  intros.
+  eapply H.
+  eauto.
+  eauto.
+  eauto.
+  eauto.
+  auto.
+Qed.  
+
+
+Lemma Modify_VHTT3 (P1: W -> Prop) (P2: Value -> W -> Prop) 
+        (fenv: funEnv) (env: valEnv)     
+        (T1 T2: Type) (VT1: ValTyp T1) (VT2: ValTyp T2)
+        (XF: XFun T1 T2) (v: T1) (x: Id)
+        (G: forall s:W, P1 s -> P2 (cst T2 (b_eval T1 T2 XF s v))
+                                ((b_exec T1 T2 XF s v))) :
+  findE env x = Some (cst T1 v) ->
+  THoareTriple_Eval P1
+                    P2 fenv env (Modify T1 T2 VT1 VT2 XF (Var x)).
+  intro.
+  unfold THoareTriple_Eval.
+  intros.
+
+  eapply G in H0.
+  inversion k3; subst.
+  eapply inj_pair2 in H7; subst.
+  eapply inj_pair2 in H7; subst.
+
+  assert (EStep fenv env (Conf Exp s (Modify T1 T2 VT1 VT2 XF (Var x)))
+                (Conf Exp s (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))))) as X1.
+  econstructor.
+  econstructor.
+  econstructor.
+  assumption.
+  
+  assert (EStep fenv env (Conf Exp s (Modify T1 T2 VT1 VT2 XF (QV (cst T1 v))))
+  (Conf Exp (b_exec T1 T2 XF s v) (Val (cst T2 (b_eval T1 T2 XF s v))))) as X2.
+  constructor.
+  eapply StepIsEClos in X2.
+
+  assert (EClosure fenv env (Conf Exp s (Modify T1 T2 VT1 VT2 XF (Var x)))
+      (Conf Exp (b_exec T1 T2 XF s v) (Val (cst T2 (b_eval T1 T2 XF s v))))).
+  econstructor.
+  eassumption.
+  assumption.
+  
+  assert (s' = (b_exec T1 T2 XF s v) /\ v0 = (cst T2 (b_eval T1 T2 XF s v))).
+  eapply ExpConfluence.
+  exact k3.
+  auto.
+  eauto.
+  eassumption.
+  assumption.
+  destruct H1.
+  rewrite H1.
+  rewrite H2.
+  assumption.
 Qed.
 
 

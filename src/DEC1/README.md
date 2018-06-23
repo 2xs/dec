@@ -49,13 +49,13 @@ Contributors: Cherif (main), Jomaa, Torrini
 * module: IdModPip.v
 
 * case study proofs:
-     Hoare_getFstShadow.v, Hoare_writeVirtualInv.v, Hoare_initVAddrTable.v
+     Hoare_getFstShadow.v, Hoare_writeVirtualInv.v, Hoare_initVAddrTable.v, Hoare_initVAddrTable_SynDir.v
 
 ## Case study: modules imported from Pip
 
 refactoring of code from https://github.com/2xs/pipcore
 
-Contributors: Jomaa (main), Nowak, refactored by Cherif
+Contributors: Jomaa (main), Nowak, refactoring by Cherif
 
 * Lib.v, Pip_DependentTypeLemmas.v, Pip_InternalLemmas.v, Pip_Prop.v,
   Pip_stateLib.v, Pip_writeVirtualInv_Lemmas.v

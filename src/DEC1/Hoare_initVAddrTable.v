@@ -90,10 +90,15 @@ BindN (WriteVirtual' p i defaultVAddr)
                   (Val (cst unit tt))
       ). 
 
-Definition initVAddrTable (p:page) (i:index) := 
+Definition initVAddrTable (p:page) (i:index) : Exp := 
 Apply
-(QF  (FC emptyE [("x",Index)] (Val (cst unit tt)) (initVAddrTableAux "initVAddrTable" "x" p) "initVAddrTable" tableSize))
-(PS[Val (cst index i)]).
+   (QF (FC emptyE
+           [("x",Index)]
+           (Val (cst unit tt))
+           (initVAddrTableAux "initVAddrTable" "x" p)
+           "initVAddrTable"
+           tableSize))
+   (PS[Val (cst index i)]).
 
 
 (******* Useful Lemmas *)

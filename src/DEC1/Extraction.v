@@ -1,7 +1,7 @@
 (* David Nowak, with Paolo Torrini 
    Universite' Lille-1 - CRIStAL-CNRS
 *)
-(* Haskell program extraction of DEC1 interpreter *)
+(* Haskell program extraction of DEC1 interpreter - example *)
 
 Require Import ExtrHaskellBasic ExtrHaskellNatInt.
 (*Require Import ExtrOcamlBasic ExtrOcamlNatInt.*)
@@ -15,3 +15,12 @@ Extraction Language Haskell.
 (*Extraction Language Ocaml.*)
 
 Extraction "interpreter" ExpEval expTypingline3 expTypingTestDAppA.
+
+(* Note:
+   The output - interpreter.hs - can be compiled with GHC 7.10.3. 
+
+   To compile with GHC 8.2.2, replace 
+       type Any = GHC.Prim.Any
+   with
+       type Any = GHC.Base.Any      
+*)
