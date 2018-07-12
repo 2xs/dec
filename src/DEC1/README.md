@@ -32,7 +32,11 @@ Contributors: Torrini (main), Nowak
 
 Contributors: Nowak (main), Torrini
 
-* Extraction.v
+* extraction to Haskell (read comments): Extraction.v
+
+* Haskell extraction test: main.hs
+
+* extraction to OCaml (read comments, not included in the general build): ExtractionOCaml.v 
 
 ## Hoare logic: 
 
