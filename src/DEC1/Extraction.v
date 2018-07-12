@@ -1,20 +1,21 @@
 (* David Nowak, with Paolo Torrini 
    Universite' Lille-1 - CRIStAL-CNRS
 *)
-(* Haskell program extraction of DEC1 interpreter - example *)
+(* Haskell program extraction of the DEC1 interpreter *)
 
-Require Import ExtrHaskellBasic ExtrHaskellNatInt.
-(*Require Import ExtrOcamlBasic ExtrOcamlNatInt.*)
-Require Import ProofIrrelevance PeanoNat.
-Require Import IdModTypeA DetermA Test_Nat1A Test_Convert.
+Require Import ExtrHaskellBasic ExtrHaskellString ExtrHaskellNatInt.
+Require Import IdModTypeA DetermA Test_Nat1A Test_Convert Test_LEnvA.
 
-Module Import M1 := Determ(Test_Nat1).
-Module Import M2 := Determ(Convert2).
+Module Import M1 := Determ(Test_LEnv).
+Module Import M2 := Determ(Test_Nat1).
+Module Import M3 := Determ(Convert2).
 
 Extraction Language Haskell.
-(*Extraction Language Ocaml.*)
 
-Extraction "interpreter" ExpEval expTypingline3 expTypingTestDAppA.
+Extraction "Interpreter"
+  Test_LEnv.expTypingTest1 Test_LEnv.expTypingline3
+  Test_Nat1.expTypingline3
+  Convert2.expTypingTestDAppA.
 
 (* Note:
    The output - interpreter.hs - can be compiled with GHC 7.10.3. 
