@@ -18,7 +18,7 @@ Extraction "Interpreter"
   Convert2.expTypingTestDAppA.
 
 (* Note:
-   The output - interpreter.hs - can be compiled with GHC 7.10.3. 
+   The output - Interpreter.hs - can be compiled with GHC 7.10.3. 
 
    To compile with GHC 8.2.2, replace 
        type Any = GHC.Prim.Any
