@@ -1,3 +1,7 @@
+-- David Nowak 
+-- Universite' Lille-1 - CRIStAL-CNRS
+--
+-- Haskell main for testing the extracted interpreter
 module Main where
 
 import Prelude
