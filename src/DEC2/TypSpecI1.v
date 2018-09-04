@@ -1,11 +1,11 @@
 (* DEC 2.0 language specification.
    Paolo Torrini, 
-   Universite' Lille-1 - CRIStAL-CNRS
+   Universite' de Lille - CRIStAL-CNRS
 *)
 
 Require Import List.
 
-Require Export AuxLib.
+Require Export AuxLibI1.
         
 Import ListNotations.
 
@@ -36,11 +36,7 @@ Inductive CTyp : Type :=
 
 Inductive VTyp : Type := VT (st: Type) (ct: CTyp).
 
-(** - Smart value type constructor *)
 
-(* Definition vtyp (T: Type * CTyp) {VT: ValTyp T} : VTyp :=
-    @exist (Type * CTyp) ValTyp T VT.
-*)
 (** - Extractors *)
 
 Definition sVTyp (t: VTyp) : Type := match t with
@@ -52,7 +48,7 @@ Definition cVTyp (t: VTyp) : CTyp := match t with
                                      end.                              
                                                                  
 
-(** Pip state class *)  
+(** DEC state class *)  
 
 Class PState (W: Type) : Type := {
 
@@ -80,19 +76,6 @@ Inductive PTyp : Type := PT (ts: list VTyp).
 Inductive FTyp : Type := FT (prs_type: PTyp) (ret_type: VTyp).
 
 (** - Extractors for function and parameter types *)
-(*
-Definition prmsTyp (ft: FTyp) : PTyp :=
-  match ft with FT ps _ _ => ps end.
-
-Definition retTyp (ft: FTyp) : VTyp :=
-  match ft with FT _ t _ => t end.
-
-Definition tagTyp (ft: FTyp) : Tag :=
-  match ft with FT _ _ g => g end.
-
-Definition dstPTyp (ps: PTyp) : list VTyp :=
-  match ps with PT ts => ts end.
-*)
 
 Definition ftypPT (ft: FTyp) : PTyp :=
   match ft with FT ps _ => ps end.
@@ -110,5 +93,4 @@ Definition VTypLs2Type (ts: list VTyp) : Type :=
   tlist2type (map sVTyp ts).
 
 
-(*************************************************************************)
 

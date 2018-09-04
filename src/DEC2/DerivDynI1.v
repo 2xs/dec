@@ -1,17 +1,19 @@
 (*  DEC 2.0 language specification.
    Paolo Torrini, 
-   Universite' Lille-1 - CRIStAL-CNRS
+   Universite' de Lille - CRIStAL-CNRS
 *)
 
 Require Import List.
 Require Import Equality.
 
-Require Import ModTypE1. 
-Require Import TypSpecE1. 
-Require Import LangSpecE1. 
-Require Import StaticSemE2.
-Require Import WeakenE2.
-Require Import UniqueTypE2.
+Require Import AuxLibI1.
+Require Import TypSpecI1. 
+Require Import ModTypI1. 
+Require Import LangSpecI1. 
+Require Import StaticSemI1.
+Require Import DynamicSemI1.
+Require Import WeakenI1.
+Require Import UniqueTypI1.
 
 Import ListNotations.
 
@@ -277,8 +279,7 @@ Lemma Prms_extended_congruence3 :
                                    (Conf Prms s' n' (PS (map Val vs))).  
 Proof.
   intros.
-  inversion H; subst.
-  inversion H; subst.
+  inversion X; subst.
   assumption.
 Defined.  
 
@@ -395,7 +396,7 @@ Lemma IfThenElse_FStep1 :
   econstructor.
   assumption.
 Defined.  
-    
+
 Lemma IfThenElse_FStep2 :   
    forall (fenv: funEnv) (env: valEnv)
           (s0 s1 s2: W) (n0 n1 n2: nat)
@@ -468,7 +469,6 @@ Lemma Call_FStep0 :
   econstructor.
   eassumption.
   econstructor.
-  reflexivity.
   assumption.
   reflexivity.
   assumption.
@@ -521,14 +521,39 @@ Proof.
                         (BindMS (mkVEnv (funValTC f) vs) (funSExp f))).
   econstructor.
   econstructor.
-  reflexivity.
   eassumption.
   assumption.
   auto.
   auto.
   assumption.
 Defined.  
-  
+
+
+
+Lemma Call_FStepS1 :   
+   forall (fenv: funEnv) (env: valEnv)
+          (s0 s3: W) (n0 n3: nat) (x: Id)
+          (v3: Value) (vs: list Value) (f: Fun) (ls: list Exp),
+    findE fenv x = Some f ->
+     funArity f = length vs -> 
+    EClosure fenv env
+         (Conf Exp s0 n0 (BindMS (mkVEnv (funValTC f) vs) (funSExp f)))
+         (Conf Exp s3 n3 (Val v3)) ->
+    isValueList2T ls vs -> 
+    EClosure fenv env (Conf Exp s0 (S n0) (Call x (PS ls)))
+                           (Conf Exp s3 n3 (Val v3)).
+Proof.
+  intros.
+  econstructor.
+  eapply Call_EStepS.
+  exact X0.
+  exact H.
+  exact H0.
+  reflexivity.
+  reflexivity.
+  exact X.
+Defined.  
+
 
 Lemma Apply_FStepS :   
    forall (fenv: funEnv) (env: valEnv)
@@ -571,61 +596,12 @@ Proof.
                         (BindMS (mkVEnv (funValTC f) vs) (funSExp f)))).
   econstructor.
   econstructor.
-  reflexivity.
   eassumption.
   assumption.
   reflexivity.
   reflexivity.
   assumption.
 Defined.  
-  
-
-
-(*
-Lemma Call_FStepS :   
-   forall (fenv: funEnv) (env: valEnv)
-          (s: W) (n: nat) (x: Id)
-          (e: Exp) (vs: list Value) (f: Fun),
-     findE fenv x = Some f ->
-     e = funSExp f ->
-     funArity f = length vs ->
-     EClosure fenv env (Conf Exp s (S n) (Call x (PS (map Val vs))))
-                       (Conf Exp s (S n) (Val v)).
-  intros.
-  eapply StepIsEClos.
-  rewrite H2.
-  econstructor.
-  eassumption.
-  econstructor.
-  reflexivity.
-  assumption.
-  reflexivity.
-  assumption.
-Defined.  
-
-Lemma Call_FStepS1 :   
-   forall (fenv: funEnv) (env: valEnv)
-          (s0 s1: W) (n0 n1: nat) (x: Id)
-          (v: Value) (vs: list Value) (f: Fun) (ps: Prms),
-     PClosure fenv env (Conf Prms s0 n0 ps)
-              (Conf Prms s1 n1 (PS (map Val vs))) ->
-     findE fenv x = Some f ->
-     v = fun0Exp f ->
-     funArity f = length vs ->
-     EClosure fenv env (Conf Exp s0 n0 (Call x ps))
-                       (Conf Exp s1 n1 (Val v)).
-  intros.  
-  eapply (EClosConcat fenv env).
-  eapply Call_extended_congruence.
-  eassumption.
-  eapply Call_FStep0.
-  eassumption.
-  assumption.
-  assumption.
-  assumption.
-
-*)
-
 
 
 Lemma Apply_FStep0 :   
@@ -661,6 +637,40 @@ Lemma Apply_FStep0 :
   reflexivity.
 Defined.
 
+
+Lemma Apply_FStep01 :   
+   forall (fenv: funEnv) (env: valEnv)
+          (s0 s1: W) (n0 n1 n2: nat) (x: Id)
+          (e: Exp) (v0 v: Value) (vs: list Value) (f: Fun) (ps: Prms),
+     EClosure fenv env (Conf Exp s0 n0 e) (Conf Exp s0 n0 (Val v0)) ->
+     PClosure fenv env (Conf Prms s0 n0 ps)
+              (Conf Prms s1 n1 (PS (map Val vs))) ->
+     findE fenv x = Some f ->
+     v = fun0Exp f ->
+     v0 = cst Nat n2 ->
+     0 = min n1 n2 -> 
+     funArity f = length vs ->
+     EClosure fenv env (Conf Exp s0 n0 (Apply x ps e))
+                       (Conf Exp s1 0 (Val v)).
+  intros.
+  eapply (EClosConcat fenv env).
+  instantiate (1:=Conf Exp s1 (min n1 n2) (Call x (PS (map Val vs)))).
+  eapply Apply_FStep.
+  eassumption.
+  eassumption.
+  eassumption.
+  reflexivity.
+  eassumption.
+  rewrite <- H2. 
+  eapply Call_FStep0.
+  eassumption.
+  assumption.
+  assumption.
+  reflexivity.
+Defined.
+
+
+
 Lemma Modify_FStep :   
    forall (n: nat) (fenv: funEnv) (env: valEnv)
           (s0 s1 s2: W) (n0 n1: nat) (t1 t2: VTyp)
@@ -675,42 +685,12 @@ Lemma Modify_FStep :
   eapply (EClosConcat fenv env).
   instantiate (1:=Conf Exp s1 n1 (Modify t1 t2 xf (Val (cst t1 v1)))).
   eapply Modify_extended_congruence.
-(*  eapply EClosWeaken.*)
   eassumption.
-(*  instantiate (1:=fenv).
-  simpl.
-  auto.
-  instantiate (1:=nil).
-  rewrite app_nil_r.
-  auto.
-*)
   eapply StepIsEClos.
   inversion H; subst.
   econstructor.
 Defined.  
   
-
-
-
-
-(*
-Lemma Call_FStep :   
-   forall (fenv: funEnv) (env env1 env2: valEnv)
-          (s0 s1: W) (n0 n1 n2 n3: nat) (x: Id)
-          (e: Exp) (v: Value) (vs: list Value) (f: Fun) (ps: Prms),
-     EClosure fenv env (Conf Exp s0 n0 e) (Conf Exp s0 n0 (Val v)) ->
-     
-     findE fenv x = Some f ->
-     funArity f = length vs ->
-     env1 = mkVEnv (funValTC f) vs ->
-     env2 = env1 ++ env ->
-     EClosure fenv env2 (Conf Exp s0 n0 e) (Conf Exp s1 n1 (Val v)) ->
-     
-     EClosure fenv env (Conf Exp s0 n0 (Call x (PS (map Val vs))))
-              (Conf Exp s1 n1 (Val v)).
-  intros.
-*)
-
 
 (****************************************************************************)
 
@@ -834,21 +814,21 @@ Proof.
   auto.
 Defined.  
 
-(*
+
 Lemma PrmsClos_aux1 (fenv: funEnv) (env: valEnv)
-                     (e: Exp) (v: Value) (es es': list Exp) (n: W)
-      : {n' : W &
-      PClosure fenv env (Conf Prms n (PS (e :: es)))
-                  (Conf Prms n' (PS (Val v :: es')))} ->
-      {n' : W &
-         prod (EClosure fenv env (Conf Exp n e)
-               (Conf Exp n' (Val v)))
-            {n'' : W &
-                  PClosure fenv env (Conf Prms n' (PS es))
-                                       (Conf Prms n'' (PS es'))} }.         
+                     (e: Exp) (v: Value) (es es': list Exp) (w: W * nat)
+      : {w' : W * nat &
+      PClosure fenv env (Conf Prms (fst w) (snd w) (PS (e :: es)))
+                  (Conf Prms (fst w') (snd w') (PS (Val v :: es')))} ->
+      {w' : W * nat &
+         prod (EClosure fenv env (Conf Exp (fst w) (snd w) e)
+               (Conf Exp (fst w') (snd w') (Val v)))
+            {w'' : W * nat &
+                  PClosure fenv env (Conf Prms (fst w') (snd w') (PS es))
+                                (Conf Prms (fst w'') (snd w'') (PS es'))} }.         
 Proof.
   intros.
-  destruct X as [n2 X].
+  destruct X as [w2 X].
   dependent induction X.
   - econstructor.
     split.
@@ -859,7 +839,7 @@ Proof.
     destruct qq.
     destruct es0 as [| e1 es1].
     inversion p.
-    specialize (IHX e1 v es1 es' state n2 eq_refl eq_refl).
+    specialize (IHX e1 v es1 es' (state,fuel) w2 eq_refl eq_refl).
     destruct IHX.
     destruct p0.
     destruct s.
@@ -893,29 +873,108 @@ Proof.
 Defined.    
 
 
+Lemma PrmsClos_aux2 (fenv: funEnv) (env: valEnv)
+      (e: Exp) (v: Value) (es es': list Exp)
+      (w0 w1: W) (n0 n1: nat) : 
+      PClosure fenv env (Conf Prms w0 n0 (PS (Val v :: es)))
+                  (Conf Prms w1 n1 (PS (Val v :: es'))) ->
+      PClosure fenv env (Conf Prms w0 n0 (PS es))
+                  (Conf Prms w1 n1 (PS es')).         
+Proof.
+  intros.
+  dependent induction X.
+  - constructor.
+  - destruct p2.
+    destruct qq.
+    destruct es0.
+    inversion p.
+    inversion p; subst.
+    specialize (IHX v es0 es' state w1 fuel n1 eq_refl eq_refl).
+    econstructor.
+    exact X0.
+    exact IHX.
+    inversion X0.
+Defined.    
+    
 
+Lemma PrmsClos_aux3 (fenv: funEnv) (env: valEnv)
+      (e: Exp) (v: Value) (es es': list Exp)
+      (w0 w1: W) (n0 n1: nat) :
+      PClosure fenv env (Conf Prms w0 n0 (PS (e :: es)))
+                  (Conf Prms w1 n1 (PS (Val v :: es'))) ->
+      {s : W * nat &
+        prod (EClosure fenv env (Conf Exp w0 n0 e)
+               (Conf Exp (fst s) (snd s) (Val v)))
+             (PClosure fenv env (Conf Prms (fst s) (snd s) (PS es))
+                                (Conf Prms w1 n1 (PS es'))) }.         
+Proof.
+  intros.
+  dependent induction X.
+  - econstructor 1 with (x:=(w1,n1)).
+    split.
+    simpl.
+    econstructor.
+    simpl.
+    econstructor.
+  - destruct p2.
+    destruct qq.
+    destruct es0 as [| e1 es1].
+    inversion p.
+    inversion p; subst.
+    
+    specialize (IHX (Val v0) v es1 es' state w1 fuel n1 eq_refl eq_refl).
+    destruct IHX.
+    destruct p0.
+    destruct x.
+    
+    constructor 1 with (x:=(w0,n0)).
+    simpl in *.
+    inversion e; subst.
+    split.
+    constructor.
+    econstructor.
+    exact X0.
+    exact p0.
+
+    inversion X1.
+    
+    specialize (IHX e1 v es1 es' state w1 fuel n1 eq_refl eq_refl).
+    destruct IHX.
+    destruct p0.
+    destruct x.
+
+    constructor 1 with (x:=(w,n)).
+    simpl in *.
+    split.
+    econstructor.
+    exact X0.
+    exact e0.
+    exact p0.
+Defined.
+    
+    
 Lemma prmsAux1
       (ftenv: funTC) (tenv: valTC) (ps: Prms) (pt: PTyp) :  
   forall (fenv: funEnv) (env: valEnv),                      
-    MatchEnvsT FunTyping fenv ftenv ->
-    MatchEnvsT ValueTyping env tenv ->
-    forall n: W, 
-    (sigT (fun (n': W) => 
+    FEnvTyping fenv ftenv ->
+    EnvTyping env tenv ->
+    forall w: W * nat, 
+    (sigT (fun (w': W * nat) => 
            sigT (fun (es: list Exp) => 
            prod (isValueListT es) 
-           (prod (PrmsClosure fenv env (Conf Prms n ps)
-                                            (Conf Prms n' (PS es))) 
-                 (PrmsTyping ftenv tenv fenv (PS es) pt))))) ->       
-    (sigT (fun (n': W) =>
+           (prod (PClosure fenv env (Conf Prms (fst w) (snd w) ps)
+                                    (Conf Prms (fst w') (snd w') (PS es))) 
+                 (PrmsTyping ftenv tenv (PS es) pt))))) ->       
+    (sigT (fun (w': W * nat) =>
            sigT (fun (vs: list Value) => 
-           prod (PrmsClosure fenv env (Conf Prms n ps)
-                                           (Conf Prms n' (PS (map Val vs)))) 
-                (PrmsTyping emptyE emptyE emptyE (PS (map Val vs)) pt)))).
+           prod (PClosure fenv env (Conf Prms (fst w) (snd w) ps)
+                            (Conf Prms (fst w') (snd w') (PS (map Val vs)))) 
+                (PrmsTyping ftenv tenv (PS (map Val vs)) pt)))).
 Proof.
   intros.
-  destruct X1 as [n1 X1].
-  destruct X1 as [es X1].
-  destruct X1 as [X1 X2].
+  destruct X as [n1 X].
+  destruct X as [es X].
+  destruct X as [X1 X2].
   destruct X2 as [X2 X3].
   exists n1.
   eapply isValueList22_T in X1.
@@ -923,24 +982,20 @@ Proof.
   destruct X1 as [vs].
   constructor 1 with (x:=vs).
   split.
-  - eapply PrmsConcat.
+  - eapply PConcat.
     eassumption.
     inversion i; subst.
     constructor.
   - destruct pt.
-    inversion i; subst. 
-    constructor.
-    eapply matchListsAux1A.
-    eassumption.
-    inversion X3; subst.
-    eassumption.
-Defined.
-
+    inversion i; subst.
+    exact X3.
+Defined.    
+   
 
 Lemma NoPrmsStep (fenv: funEnv) (env: valEnv)
-                  (n0 n1: W) (es1 es2: list Exp):
-  PrmsStep fenv env (Conf Prms n0 (PS es1))
-                      (Conf Prms n1 (PS es2)) ->
+                  (w0 w1: W * nat) (es1 es2: list Exp):
+  PStep fenv env (Conf Prms (fst w0) (snd w0) (PS es1))
+                      (Conf Prms (fst w1) (snd w1) (PS es2)) ->
    isValueListT es1 -> False.
 Proof.
   intros.
@@ -958,45 +1013,251 @@ Proof.
   inversion e0.
 Defined.
 
-*)
+
+Lemma NoNilPrmsClos1 (fenv: funEnv) (env: valEnv)
+                  (s0 s1: W) (n0 n1: nat) (e: Exp) (es: list Exp):
+  PClosure fenv env (Conf Prms s0 n0 (PS (e::es)))
+                      (Conf Prms s1 n1 (PS nil)) -> False.
+  intros.
+  dependent induction X.
+  destruct p2.
+  destruct qq.
+  destruct es0.
+  inversion p.
+  specialize (IHX state s1 fuel n1 e0 es0 eq_refl eq_refl).
+  exact IHX.
+Defined.  
+
+Lemma NoNilPrmsClos2 (fenv: funEnv) (env: valEnv)
+                  (s0 s1: W) (n0 n1: nat) (e: Exp) (es: list Exp):
+  PClosure fenv env (Conf Prms s0 n0 (PS nil))
+                      (Conf Prms s1 n1 (PS (e::es))) -> False.
+  intros.
+  dependent induction X.
+  destruct p2.
+  destruct qq.
+  destruct es0.
+  specialize (IHX state s1 fuel n1 e es eq_refl eq_refl).
+  exact IHX.
+  inversion p.
+Defined.  
+
+
+
+(************* from TSoundness ***************************************)
+(********************************************************************)
+
+Program Definition ExtRelTyp (tenv : valTC) (x : Id)
+      (v : Value) (t : VTyp) (mB: valueVTyp v = t)
+       (env: valEnv) (m2: EnvTyping env tenv) (mA: findE env x = Some v) :
+   findE tenv x = Some t.  
+  unfold EnvTyping in m2.
+  unfold MatchEnvs in m2.
+  rewrite m2.
+  unfold thicken.
+  rewrite <- mB.
+  revert m2.
+  revert tenv.
+  induction env.
+  inversion mA.
+  intros tenv m2.
+  destruct a.
+  simpl in *.
+  destruct (IdT.IdEqDec x i).
+  injection mA; intro.
+  rewrite H.
+  reflexivity.
+  specialize (IHenv mA (map (thicken StaticSemL.Id valueVTyp) env) eq_refl).
+  exact IHenv.
+Defined. 
+
+
+
+Program Definition ExtRelVal2A {K V1 V2: Type} {h: DEq K} (f: V1 -> V2)
+       (tenv: Envr K V2) (venv: Envr K V1) (x: K) (t: V2): 
+    MatchEnvs K f venv tenv ->
+    findE tenv x = Some t ->
+    sigT2 (fun v: V1 => findE venv x = Some v) (fun v: V1 => f v = t). 
+Proof.
+  unfold MatchEnvs.
+  unfold thicken.
+  intros.
+  rewrite H in H0.
+  clear H.
+  clear tenv.
+  induction venv.
+  simpl in *.
+  discriminate H0.
+  destruct a.
+  simpl in *.
+  destruct (dEq x k).
+  injection H0; intro.
+  clear H0.
+  constructor 1 with (x:=v).
+  reflexivity.
+  rewrite H in *.
+  reflexivity.
+  eapply IHvenv.
+  intuition n.
+Defined.  
+
+
+Definition ExtRelVal2A_1 {K V1 V2: Type} {h: DEq K} (f: V1 -> V2)
+       (tenv: Envr K V2) (venv: Envr K V1) (x: K) (t: V2) 
+    (k1: MatchEnvs K f venv tenv)
+    (k2: findE tenv x = Some t) : V1 :=
+   proj1_of_sigT2 (ExtRelVal2A f tenv venv x t k1 k2).
+
+Definition ExtRelVal2A_2 {K V1 V2: Type} {h: DEq K} (f: V1 -> V2)
+       (tenv: Envr K V2) (venv: Envr K V1) (x: K) (t: V2) 
+    (k1: MatchEnvs K f venv tenv)
+    (k2: findE tenv x = Some t) :
+  findE venv x = Some (ExtRelVal2A_1 f tenv venv x t k1 k2) :=
+  projT2 (fst_sigT_of_sigT2 (ExtRelVal2A f tenv venv x t k1 k2)).
+
+Definition ExtRelVal2A_3 {K V1 V2: Type} {h: DEq K} (f: V1 -> V2)
+       (tenv: Envr K V2) (venv: Envr K V1) (x: K) (t: V2) 
+    (k1: MatchEnvs K f venv tenv)
+    (k2: findE tenv x = Some t) : sigT (fun v: V1 => f v = t) :=
+  snd_sigT_of_sigT2 (ExtRelVal2A f tenv venv x t k1 k2). 
+
+Definition ExtRelVal2A_4 {K V1 V2: Type} {h: DEq K} (f: V1 -> V2)
+       (tenv: Envr K V2) (venv: Envr K V1) (x: K) (t: V2) 
+    (k1: MatchEnvs K f venv tenv)
+    (k2: findE tenv x = Some t) :
+  f (ExtRelVal2A_1 f tenv venv x t k1 k2) = t :=
+  projT2 (snd_sigT_of_sigT2 (ExtRelVal2A f tenv venv x t k1 k2)). 
+
+
+Lemma TransformA_Var (P : valEnv -> Exp -> VTyp -> Type)
+      (Q : VTyp -> Type)
+      (F1 : forall (env: valEnv) (x: Id) (t: VTyp), P env (Var x) t -> Type)
+      (F2: forall t: VTyp, Q t -> Type)
+  : (forall (tenv : valTC) (x : Id)
+    (v : Value) 
+    (t : VTyp) (i : findE tenv x = Some t) (mB: valueVTyp v = t)
+    (env: valEnv) (mA: findE env x = Some v)
+    (m2: EnvTyping env tenv), 
+    (P env (Var x) t * Q t) ->
+     sigT (fun I: (P env (Var x) t * Q t) => 
+             F1 env x t (fst I) = F2 t (snd I))) -> 
+    forall (tenv : valTC) (x : Id) (t: VTyp)
+    (i : findE tenv x = Some t) 
+    (env: valEnv) 
+    (m2: EnvTyping env tenv), 
+    (P env (Var x) t * Q t) ->
+     sigT (fun I: (P env (Var x) t * Q t) => 
+             F1 env x t (fst I) = F2 t (snd I)).
+Proof.
+  intros.
+  specialize (X tenv x (ExtRelVal2A_1 valueVTyp tenv env x t m2 i) t i
+         (ExtRelVal2A_4 valueVTyp tenv env x t m2 i)     
+         env                                          
+         (ExtRelVal2A_2 valueVTyp tenv env x t m2 i) 
+         m2 X0).       
+  exact X.   
+Defined.
+
+
+(*****************************************************************)
+
+
+Program Definition ExtRelVal2B 
+       (env: valEnv) (x: Id) (t: VTyp): 
+    findE (valEnv2valTC env) x = Some t ->
+    sigT2 (fun v: Value => findE env x = Some v)
+          (fun v: Value => projT1 v = t). 
+Proof.
+  induction env.
+  simpl in *.
+  intros.
+  discriminate H.
+  destruct a.
+  simpl in *.
+  destruct (IdT.IdEqDec x i).
+  intro.
+  injection H; intro.
+  constructor 1 with (x:=v).
+  reflexivity.
+  exact H0.
+  intro.
+  eapply IHenv.
+  exact H.
+Defined.  
+
+Lemma ExtRelVal2B_ok (env: valEnv)
+    (x: Id) (t: VTyp) (v: Value) 
+    (k1: findE (valEnv2valTC env) x = Some t)
+    (k2: findE env x = Some v) :
+  v = proj1_of_sigT2 (ExtRelVal2B env x t k1).
+  induction env.
+  inversion k1.
+  destruct a.
+  simpl in k1, k2.
+  simpl.
+  unfold ExtRelVal2B.
+  unfold proj1_of_sigT2.
+  unfold sigT_of_sigT2.
+  simpl.
+  destruct (IdT.IdEqDec x i).
+  inversion k2; subst.
+  reflexivity.
+  specialize (IHenv k1 k2).
+  rewrite IHenv.
+  reflexivity.
+Defined.
+
+Lemma ExtRelVal2B_Typ_ok (env: valEnv)
+    (x: Id) (t: VTyp) (v: Value) 
+    (k1: findE (valEnv2valTC env) x = Some t)
+    (k2: findE env x = Some v) :
+  (sVTyp (projT1 v)) =
+      sVTyp (projT1
+       (proj1_of_sigT2
+          (ExtRelVal2B env x t k1))).
+  rewrite (ExtRelVal2B_ok env x t v k1 k2).
+  reflexivity.
+Defined.  
+
+Lemma ExtRelVal2B_TypS_ok (env: valEnv)
+    (x: Id) (t: VTyp) (v: Value) 
+    (k1: findE (valEnv2valTC env) x = Some t)
+    (k2: findE env x = Some v) :
+    sVTyp (projT1
+       (proj1_of_sigT2
+          (ExtRelVal2B env x t k1))) =
+    (sVTyp (projT1 v)).
+  rewrite (ExtRelVal2B_ok env x t v k1 k2).
+  reflexivity.
+Defined.  
+
+
+
+Definition ExtRelVal2B_1
+           (env: valEnv) (x: Id) (t: VTyp)
+           (k: findE (valEnv2valTC env) x = Some t) : Value :=
+ proj1_of_sigT2 (ExtRelVal2B env x t k).
+  
+Definition ExtRelVal2B_2
+           (env: valEnv) (x: Id) (t: VTyp)
+           (k: findE (valEnv2valTC env) x = Some t) :
+  findE env x = Some (ExtRelVal2B_1 env x t k) :=
+ projT2 (fst_sigT_of_sigT2 (ExtRelVal2B env x t k)).
+
+
+Definition ExtRelVal2B_3 (env: valEnv) (x: Id) (t: VTyp)
+           (k: findE (valEnv2valTC env) x = Some t) :
+    sigT (fun v: Value => valueVTyp v = t) :=
+ snd_sigT_of_sigT2 (ExtRelVal2B env x t k).
+
+
+Definition ExtRelVal2B_4
+           (env: valEnv) (x: Id) (t: VTyp)
+           (k: findE (valEnv2valTC env) x = Some t) :
+  valueVTyp (ExtRelVal2B_1 env x t k) = t :=
+ projT2 (snd_sigT_of_sigT2 (ExtRelVal2B env x t k)).
 
 
 End DerivDyn.
-
-
-(*
-Require Import Eqdep FunctionalExtensionality Coq.Program.Tactics.
-Require Import Coq.Init.Specif.
-Require Import Coq.Logic.JMeq.
-*)
-
-(*
-Definition callFun (fenv: funEnv) (cenv: tfcEnv) (x: Id) : option Fun :=
-  match findE cenv x with
-  | None => None
-  | Some c =>
-    match findE fenv (fst (fst c)) with
-    | None => None
-    | Some f => Some f
-    end
-  end.
-
-Definition callNamedFun (fenv: funEnv) (cenv: tfcEnv) (x: Id) :
-                                 option (Id * Fun) :=
-  match findE cenv x with
-  | None => None
-  | Some c =>
-    match findE fenv (fst (fst c)) with
-    | None => None
-    | Some f => Some (fst (fst c), f)
-    end
-  end.
-*)
-
-
-  
-
-
-
 
 

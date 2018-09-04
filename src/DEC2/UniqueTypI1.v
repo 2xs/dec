@@ -1,16 +1,17 @@
 (*  DEC 2.0 language specification.
    Paolo Torrini  
-   Universite' Lille-1 - CRIStAL-CNRS
+   Universite' de Lille - CRIStAL-CNRS
 *)
 
 Require Import List.
 
-Require Import ModTypE1. 
-Require Import TypSpecE1. 
-Require Import LangSpecE1. 
-Require Import StaticSemE2.
-Require Import DynamicSemE2.
-Require Import WeakenE2.
+Require Import AuxLibI1.
+Require Import TypSpecI1. 
+Require Import ModTypI1. 
+Require Import LangSpecI1. 
+Require Import StaticSemI1.
+Require Import DynamicSemI1.
+Require Import WeakenI1.
 
 Import ListNotations.
 
@@ -58,8 +59,8 @@ Lemma UniVTyping :
     t1 = t2.
 Proof.
   intros.
-  inversion X; subst.
-  inversion X0; subst.
+  inversion H; subst.
+  inversion H0; subst.
   reflexivity.
 Defined.  
 
@@ -70,15 +71,13 @@ Lemma UniIdTyping :
     t1 = t2.
 Proof.
   intros.
-  inversion X; subst.
-  inversion X0; subst.
- (* inversion X1; subst.
-  inversion X2; subst. *)
-  destruct (findE tenv x).
   inversion H; subst.
   inversion H0; subst.
+  destruct (findE tenv x).
+  inversion H2; subst.
+  inversion H3; subst.
   reflexivity.
-  inversion H.
+  inversion H2.
 Defined.  
 
 Lemma UniIdFTyping :
@@ -88,15 +87,13 @@ Lemma UniIdFTyping :
     ft1 = ft2.
 Proof.
   intros.
-  inversion X; subst.
-  inversion X0; subst.
-(*  inversion X1; subst.
-  inversion X2; subst. *)
-  destruct (findE ftenv x).
   inversion H; subst.
   inversion H0; subst.
+  destruct (findE ftenv x).
+  inversion H2; subst.
+  inversion H3; subst.
   reflexivity.
-  inversion H.
+  inversion H2.
 Defined.  
 
 Lemma UniEnvTyping :
@@ -106,8 +103,8 @@ Lemma UniEnvTyping :
     tenv1 = tenv2.
 Proof.
   intros.
-  inversion X; subst.
-  inversion X0; subst.
+  inversion H; subst.
+  inversion H0; subst.
   reflexivity.
 Defined.
 
@@ -118,8 +115,8 @@ Lemma UniFEnvTyping :
     ftenv1 = ftenv2.
 Proof.
   intros.
-  inversion X; subst.
-  inversion X0; subst.
+  inversion H; subst.
+  inversion H0; subst.
   reflexivity.
 Defined.
 
@@ -174,8 +171,8 @@ Proof.
     eapply UniEnvTyping.
     exact e1.
     assumption.
-    rewrite <- H0 in X3.
-    eapply H in X3.
+    rewrite <- H0 in X2.
+    eapply H in X2.
     assumption.
   - intros.
     unfold UniETyping_def in *.
@@ -275,8 +272,8 @@ Proof.
     eapply UniEnvTyping.
     exact e0.
     assumption.
-    rewrite <- H0 in X3.
-    eapply H in X3.
+    rewrite <- H0 in X2.
+    eapply H in X2.
     assumption.
   - intros.
     unfold UniETyping_def in *.
@@ -329,8 +326,3 @@ Defined.
 
 End UniqueTyp.
 
-(*
-Require Import Eqdep FunctionalExtensionality Coq.Program.Tactics.
-Require Import Coq.Init.Specif.
-Require Import Coq.Logic.JMeq.
-*)

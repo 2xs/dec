@@ -1,10 +1,10 @@
 (* DEC 2.0 language specification.
    Paolo Torrini, 
-   Universite' Lille-1 - CRIStAL-CNRS
+   Universite' de Lille - CRIStAL-CNRS
 *)
 
-Require Import AuxLib.
-Require Import TypSpecE1.
+Require Import AuxLibI1.
+Require Import TypSpecI1.
 
 (** * DEC 2.0 module type *)
 
@@ -30,9 +30,6 @@ Instance IdEq : DEq Id :=
 
 Parameter W : Type.
 
-(** Local proof irrelevance assumption *)
-
-(* Parameter Loc_PI : forall (T: Type * CTyp) (p1 p2: ValTyp T), p1 = p2. *)
 
 (** State initialisation *)
 
@@ -41,9 +38,7 @@ Parameter BInit : W.
 (** W is the state type indeed, as it is an instance of the model state class *)
 
 Instance WP : PState W :=
-{
-(*  loc_pi := Loc_PI;*)
-  
+{ 
   b_init := BInit
 }.              
   

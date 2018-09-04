@@ -1,16 +1,17 @@
 (*  DEC 2.0 language specification.
    Paolo Torrini  
-   Universite' Lille-1 - CRIStAL-CNRS
+   Universite' de Lille - CRIStAL-CNRS
 *)
 
 Require Import List.
 Require Import Equality.
 
-Require Import ModTypE1. 
-Require Import TypSpecE1. 
-Require Import LangSpecE1. 
-Require Import StaticSemE2.
-Require Import DynamicSemE2.
+Require Import AuxLibI1.
+Require Import TypSpecI1. 
+Require Import ModTypI1. 
+Require Import LangSpecI1. 
+Require Import StaticSemI1.
+Require Import DynamicSemI1.
 
 Import ListNotations.
 
@@ -388,6 +389,39 @@ Proof.
 Defined.
 
 
+Lemma EClosWeakenA1 
+      (fenv: funEnv) (env env': valEnv)
+      (a1 a2: AConfig Exp):
+      EClosure fenv env a1 a2 ->
+      EClosure fenv (env ++ env') a1 a2.
+Proof.
+  intros.
+  dependent induction X.
+  constructor.
+  eapply EStepWeakenA with (fenv':=nil) (env':=env') in e.
+  rewrite app_nil_r in e.
+  econstructor.
+  exact e.
+  exact IHX.
+Defined.
+
+Lemma PClosWeakenA1 
+      (fenv: funEnv) (env env': valEnv)
+      (a1 a2: AConfig Prms):
+      PClosure fenv env a1 a2 ->
+      PClosure fenv (env ++ env') a1 a2.
+Proof.
+  intros.
+  dependent induction X.
+  constructor.
+  eapply PStepWeakenA with (fenv':=nil) (env':=env') in p.
+  rewrite app_nil_r in p.
+  econstructor.
+  exact p.
+  exact IHX.
+Defined.
+
+
 Lemma EStepWeaken
            (fenv fenv1 fenv2: funEnv) (env env1 env2: valEnv)
            (a1 a2: AConfig Exp):
@@ -447,13 +481,13 @@ Defined.
 Lemma EnvrWeaken (T: Type) (env env': Envr Id T) (x: Id) (t: T) :   
  EnvrAssign env x t -> EnvrAssign (env ++ env') x t.
   intros.
-  inversion X; subst.
+  inversion H; subst.
  (* inversion X0; subst. *)
-  constructor.
+  unfold EnvrAssign.
  (* constructor. *)
   erewrite override_simpl1.
   exact H.
-  exact H.
+  exact H1.
 Defined.  
 
 Lemma IdTWeaken (tenv tenv': valTC) (x: Id) (t: VTyp) : 
@@ -719,18 +753,4 @@ Defined.
 End Weaken.
 
 
-(*
-Require Import Eqdep FunctionalExtensionality Coq.Program.Tactics.
-Require Import Coq.Init.Specif.
-Require Import Coq.Logic.JMeq.
-*)
-(*
-Lemma EStepWeaken_defLemma 
-           (fenv: funEnv) (env env': valEnv)
-           (s1 s2: W) (n1 n2: nat) (e1 e2: Exp):
-      EStep fenv env (Conf Exp s1 n1 e1) (Conf Exp s2 n2 e2) ->
-      EStep fenv (env ++ env') (Conf Exp s1 n1 e1) (Conf Exp s2 n2 e2).
-Proof.    
-  eapply Weaken_EStep_mut2.
-*)    
 

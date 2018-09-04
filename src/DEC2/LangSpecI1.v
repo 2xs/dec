@@ -1,16 +1,12 @@
 (*  DEC 2.0 language specification.
    Paolo Torrini 
    Universite' Lille-1 - CRIStAL-CNRS
-
-   no tags, single parameter in external function calls, 
-   no local functions
-   * good *
 *)
 
 Require Import List.
 
-Require Import ModTypE1. 
-Require Import TypSpecE1. 
+Require Import ModTypI1. 
+Require Import TypSpecI1. 
 
 Import ListNotations.
 
@@ -148,31 +144,32 @@ with Prms_mut := Induction for Prms Sort Type.
 
 
 Inductive Fun : (** - Functions *)
-  Type := FC (tenv: valTC) (t: VTyp) (v: Value) (e: Exp).
-
-Definition funFTyp (f: Fun) : FTyp :=
-  match f with (FC tenv t _ _) => FT (PT (map snd tenv)) t end.
-
-Definition funValTC (f: Fun) : valTC :=
-  match f with (FC tenv _ _ _) => tenv end.
-
-Definition funTypLS (f: Fun) : list VTyp :=
-  match f with (FC tenv _ _ _) => map snd tenv end.
-
-Definition funArity (f: Fun) : nat :=
-  match f with (FC tenv _ _ _) => length tenv end.
-
-Definition funPTyp (f: Fun) : PTyp :=
-  match f with (FC tenv _ _ _) => PT (map snd tenv) end.
+  Type := FC (tenv: valTC) (v: Value) (e: Exp).
 
 Definition funVTyp (f: Fun) : VTyp :=
-  match f with (FC _ t _ _) => t end.
+  match f with (FC _ v _) => projT1 v end.
+
+Definition funValTC (f: Fun) : valTC :=
+  match f with (FC tenv _ _) => tenv end.
+
+Definition funFTyp (f: Fun) : FTyp :=
+  match f with (FC tenv v _) => FT (PT (map snd tenv)) (projT1 v) end.
+
+Definition funTypLS (f: Fun) : list VTyp :=
+  match f with (FC tenv _ _) => map snd tenv end.
+
+Definition funArity (f: Fun) : nat :=
+  match f with (FC tenv _ _) => length tenv end.
+
+Definition funPTyp (f: Fun) : PTyp :=
+  match f with (FC tenv _ _) => PT (map snd tenv) end.
+
 
 Definition fun0Exp (f: Fun) : Value :=
-  match f with (FC _ _ v _) => v end.
+  match f with (FC _ v _) => v end.
 
 Definition funSExp (f: Fun) : Exp :=
-  match f with (FC _ _ _ e) => e end.
+  match f with (FC _ _ e) => e end.
 
 
 (** Function environments *)
@@ -224,9 +221,7 @@ Definition Return (x: Id) (mt: option VTyp) (e: Exp) : Exp :=
 
 Definition NoRet (e: Exp) : Exp := BindN e Skip. 
 
-(*
-Instance PState_ValTyp : ValTyp (PState W, CPtr (CInt I8 Unsigned)). 
-*)
+
 
 Definition PStateV := VT (PState W) (CPtr (CInt I8 Unsigned)).
 
@@ -255,30 +250,3 @@ Definition Reset : Exp :=
 
 End LangSpec.
 
-
-(*
-Definition ValueI2T (T: VTyp) (v: ValueI T) : sVTyp T :=
-    match v with Cst _  x => x end.             
-
-Definition cstExt (v: Value) : cVTyp (projT1 v) :=
-                                 ValueI2T (projT1 v) (projT2 v).
-*)
-(*
-Inductive Exp : (** - Expressions *)
-       Type :=
-         | Lift (v: RValue)
-         | Var (x: Id)
-         | FVar (x: Id)      
-         | BindN (e1: Exp) (e2: Exp) 
-         | BindS (x: Id * VTyp) (e1: Exp) (e2: Exp) 
-         | BindMS (fenv: Envr Id (FTyp * Id * nat))
-                  (venv: Envr Id Value) (e: Exp)
-         | IfThenElse (e1: Exp) (e2: Exp) (e3: Exp)       
-         | Apply (x: Id) (e: Exp) (ps: Prms) 
-         | Modify (PT: PTyp) (VT: VTyp)
-                  (XF: XFun PT VT) (ps: Prms)
-with RValue : (** - Return values *)
-   Type := Ret (e: Exp)   
-with Prms : (** - Parameters *)
-   Type := PS (es: list Exp).
-*)

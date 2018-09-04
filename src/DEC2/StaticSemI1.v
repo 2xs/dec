@@ -1,14 +1,15 @@
 (*  DEC 2.0 language specification.
    Paolo Torrini, 
-   Universite' Lille-1 - CRIStAL-CNRS
+   Universite' de Lille - CRIStAL-CNRS
 *)
 
 Require Import List.
 Require Import Equality.
 
-Require Import ModTypE1. 
-Require Import TypSpecE1. 
-Require Import LangSpecE1. 
+Require Import AuxLibI1.
+Require Import TypSpecI1. 
+Require Import ModTypI1. 
+Require Import LangSpecI1. 
 
 Import ListNotations.
 
@@ -35,13 +36,13 @@ Definition WP := IdT.WP.
 
 (** Value and function typing *)
 
-Definition VTyping (v: Value) (t: VTyp) : Type :=
+Definition VTyping (v: Value) (t: VTyp) : Prop :=
   valueVTyp v = t.                       
 
-Definition sVTyping (T: Type) (v: T) (t: VTyp) : Type :=
+Definition sVTyping (T: Type) (v: T) (t: VTyp) : Prop :=
     sVTyp t = T. 
 
-Definition FTyping (f: Fun) (ft: FTyp) : Type :=
+Definition FTyping (f: Fun) (ft: FTyp) : Prop :=
    funFTyp f = ft.
 
 
@@ -50,11 +51,10 @@ Lemma VTyping2sVTyp_lemma (v: Value) (t: VTyp) :
   intros.
   destruct v.
   destruct v.
-  unfold VTyping in X.
-  rewrite <- X.
+  unfold VTyping in H.
+  rewrite <- H.
   simpl.
   exact v.
-  Show Proof.
 Defined.  
 
 Definition VTyping2sVTyp {v: Value} {t: VTyp} : VTyping v t -> sVTyp t :=
@@ -66,21 +66,14 @@ Definition VTyping2sVTyp {v: Value} {t: VTyp} : VTyping v t -> sVTyp t :=
         (fun t0 : VTyp => sVTyp t0) v1 t X1
   end.
 
-(*
- match v0 with
-  | Cst _ v1 =>
-      fun X1 : VTyping (existT ValueI x (Cst x v1)) t => 
-      eq_rect_r sVTyp v1 X1
-  end.
-*)
 Definition VTyping_lemma {v: Value} {t: VTyp} : VTyping v t ->
                 sigT (fun x : sVTyp t => v = cst t x). 
   intros.
   destruct v.
   destruct v.
-  unfold VTyping in X.
-  simpl in X.
-  rewrite <- X.
+  unfold VTyping in H.
+  simpl in H.
+  rewrite <- H.
   constructor 1 with (x:=v).
   auto.
 Defined.  
@@ -88,19 +81,14 @@ Defined.
   
 (** Typing of identifiers *)
 
-Definition IdTyping : valTC -> Id -> VTyp -> Type := EnvrAssign. 
+Definition IdTyping : valTC -> Id -> VTyp -> Prop := EnvrAssign. 
 
-Definition IdFTyping : funTC -> Id -> FTyp -> Type := EnvrAssign. 
+Definition IdFTyping : funTC -> Id -> FTyp -> Prop := EnvrAssign. 
 
-(*
-Inductive EnvrDAssign {K V1 V2: Type} {h: DEq K} (f: V2 -> V1) :
-      Envr K V2 -> K -> V1 -> Type.
-*)
-
-Definition IdEnvTyping : valEnv -> Id -> VTyp -> Type :=
+Definition IdEnvTyping : valEnv -> Id -> VTyp -> Prop :=
   EnvrDAssign valueVTyp.
 
-Definition IdFEnvTyping : funEnv -> Id -> FTyp -> Type :=
+Definition IdFEnvTyping : funEnv -> Id -> FTyp -> Prop :=
   EnvrDAssign funFTyp.
 
 
@@ -117,7 +105,7 @@ Definition valEnv2valTC (env: valEnv) : valTC :=
     map (thicken Id valueVTyp) env.
 (*  map IdValue2IdVTyp env. *)
 
-Definition EnvTyping (env: valEnv) (tenv: valTC) : Type :=
+Definition EnvTyping (env: valEnv) (tenv: valTC) : Prop :=
     MatchEnvs Id valueVTyp env tenv.
 (*  tenv = valEnv2valTC env. *)
 
@@ -134,7 +122,7 @@ Definition funEnv2funTC (env: funEnv) : funTC :=
     map (thicken Id funFTyp) env.
 (*  map IdFun2IdFTyp env. *)
 
-Definition FEnvTyping (env: funEnv) (tenv: funTC) : Type :=
+Definition FEnvTyping (env: funEnv) (tenv: funTC) : Prop :=
     MatchEnvs Id funFTyp env tenv.
 (*  tenv = funEnv2funTC env. *)
 
@@ -179,14 +167,6 @@ Inductive ExpTyping : (** Expressions *)
                        ExpTyping ftenv tenv' e2 t2 ->
                        ExpTyping ftenv tenv
                                  (BindS x m e1 e2) t2
-(*  | BindS_N_Typing : forall (ftenv: funTC) (tenv tenv': valTC)
-                            (x: Id) (e1 e2: Exp) (t1 t2: VTyp), 
-                       tenv' = (x, t1) :: tenv ->   
-                       ExpTyping ftenv tenv e1 t1 ->
-                       ExpTyping ftenv tenv' e2 t2 ->
-                       ExpTyping ftenv tenv
-                                 (BindS x None e1 e2) t2
-*)
 (** - binding by local environments *)                                 
   | BindMS_Typing : forall (ftenv: funTC)
                            (tenv tenv0 tenv1: valTC)
@@ -243,37 +223,22 @@ with PrmsTyping_mut := Induction for PrmsTyping Sort Type.
 
 
 
-(** function is well typed *)
+(** function is well typed wrt to environment *)
 
 Definition FunWT (ftenv: funTC) (f: Fun) : Type :=
     match f with 
-      | FC tenv t v e =>
-        (VTyping v t * ExpTyping ftenv tenv e t)
+      | FC tenv v e => ExpTyping ftenv tenv e (projT1 v)
     end.                            
 
 
 (** the function environment is well typed *)
-Inductive FEnvWT (fenv: funEnv) : Type :=
-| FEnvWT_SC : (forall (ftenv: funTC) (x: Id) (f: Fun),
-    FEnvTyping fenv ftenv -> 
+Definition FEnvWT (fenv: funEnv) : Type :=
+  forall (ftenv: funTC),
+   FEnvTyping fenv ftenv ->
+   forall (x: Id) (f: Fun),
     findE fenv x = Some f ->
-    FunWT ftenv f) -> FEnvWT fenv.
+    FunWT ftenv f.
     
-
-(*
-(** the function environment is well typed *)
-Inductive FEnvWT (fenv: funEnv) : Type :=
-| FEnvWT_SC : (forall (ftenv: funTC) (x: Id) (f: Fun),
-    findE fenv x = Some f -> 
-    forall (tenv: valTC) (t: VTyp) 
-           (v: Value) (e: Exp),
-      f = FC tenv t v e ->
-      FEnvTyping fenv ftenv -> 
-      (VTyping v t *
-      ExpTyping ftenv tenv e t)) ->
-   FEnvWT fenv.
-*)
- 
 
 Definition ExpWTyping (fenv: funEnv) (env: valEnv)
            (e: Exp) (t: VTyp) : Type :=
@@ -295,6 +260,24 @@ Definition PrmsWTyping (fenv: funEnv) (env: valEnv)
 
 (********************************************************************)
 
+(** function is well typed *)
+
+Definition FunWT1 (f: Fun) : Type :=
+    match f with 
+      | FC tenv v e => VTyping v (projT1 v)
+    end.                            
+
+Lemma FunWT1_prop (f: Fun) :
+  FunWT1 f.
+  unfold FunWT1.
+  destruct f.
+  destruct v.
+  constructor.
+Defined.  
+
+
+(********************************************************************)
+
 (** Value lists in Prop *)
 
 Inductive isValue (e: Exp) : Prop :=
@@ -309,15 +292,15 @@ IsValueList2 :  els = map Val vls -> isValueList2 els vls.
 
 (** Value lists in Type *)
 
-Inductive isValueT (e: Exp) : Type :=
-  IsValueT : forall (v: Value), e = Val v -> isValueT e.
+Definition isValueT (e: Exp) : Type :=
+  sigT (fun (v: Value) => e = Val v).
 
 Definition isValueListT (ls : list Exp) : Type :=
 ForallT isValueT ls.
 
-Inductive isValueList2T  
+Definition isValueList2T  
   (els : list Exp) (vls : list Value) : Type :=
-IsValueList2T :  els = map Val vls -> isValueList2T els vls.
+  els = map Val vls.
 
 (***************************************************************)
 
@@ -337,10 +320,9 @@ Defined.
 Lemma isValueList2IsValueT (els : list Exp) (vls : list Value) :
   isValueList2T els vls -> isValueListT els.
 Proof.
+  unfold isValueListT, isValueList2T.
   intros.
   inversion H; subst.
-  unfold isValueList.
-  revert H.
   induction vls.
   simpl.
   constructor.
@@ -348,8 +330,7 @@ Proof.
   econstructor.
   reflexivity.
   eapply IHvls.
-  constructor.
-  auto.
+  reflexivity.
 Defined.  
 
 Lemma isValueList22_T (ls : list Exp) : isValueListT ls ->
@@ -360,7 +341,6 @@ Proof.
   exists nil.  
   constructor.
   simpl.
-  reflexivity.
   intros.
   assert (isValueListT ls).
   inversion X; subst.
@@ -369,10 +349,8 @@ Proof.
   inversion X1; subst. 
   eapply IHls in X0.
   destruct X0 as [vs1 X0].
-  constructor 1 with (x := v::vs1).
-  constructor.
+  constructor 1 with (x := x::vs1).
   inversion X0; subst.
-  simpl.
   reflexivity.
 Defined.  
 
@@ -392,13 +370,14 @@ Defined.
 Lemma sameLengthVV_T (es : list Exp) (vs : list Value) : 
   isValueList2T es vs -> length es = length vs.
 Proof.
+  unfold isValueList2T.
 intros.  
 inversion H; subst.
-clear H.
 induction vs.
 auto.
 simpl.
 rewrite IHvs.
+reflexivity.
 reflexivity.
 Defined.
 
@@ -481,9 +460,9 @@ Defined.
 (* lemmas about function typing *)
 
 Lemma FEnvWT_nil_lemma : FEnvWT nil.
-  econstructor.
+  unfold FEnvWT.
   intros.
-  inversion H.
+  inversion H0.
 Defined.  
 
 Lemma funFTyp_lemma (f: Fun) (pt: PTyp) (t: VTyp) :
@@ -498,23 +477,17 @@ Lemma funFTyp_lemma (f: Fun) (pt: PTyp) (t: VTyp) :
 Defined.
 
 
-Lemma FunTyping0_lemma (ftenv: funTC) (fenv: funEnv)
-      (x: Id) (f: Fun) (v: Value) (t: VTyp) :
-    FEnvWT fenv ->
-    FEnvTyping fenv ftenv ->
-    findE fenv x = Some f ->
+Lemma FunTyping0_lemma (f: Fun) (v: Value) (t: VTyp) :
     v = fun0Exp f ->
     t = funVTyp f -> 
     VTyping v t.
   intros.
-  inversion X; subst.
-  specialize (X1 ftenv x f X0 H).
   destruct f.
-(*  specialize (X1 tenv t v e eq_refl X0).*)
-  destruct X1.
+  inversion H0; subst.
   simpl.
-  assumption.
+  reflexivity.
 Defined.
+  
 
 Lemma FunTypingS_lemma (ftenv: funTC) (fenv: funEnv) (tenv: valTC)
       (x: Id) (f: Fun) (e: Exp) (t: VTyp) :
@@ -526,14 +499,16 @@ Lemma FunTypingS_lemma (ftenv: funTC) (fenv: funEnv) (tenv: valTC)
     t = funVTyp f -> 
     ExpTyping ftenv tenv e t.
   intros.
-  inversion X; subst.
-  specialize (X1 ftenv x f X0 H).
+  specialize (X ftenv H x f H0).
   destruct f.
-(*  specialize (X1 tenv t v e eq_refl X0).*)
-  destruct X1.
-  simpl.
+  simpl in H3.
+  destruct v.
+  simpl in H3.
+  inversion H3; subst.
+  simpl in *.
   assumption.
-Defined.
+Defined.  
+
 
 Lemma VTypingFun0_lemma (ftenv: funTC) (fenv: funEnv)
       (x: Id) (f: Fun) (v: Value) (t: VTyp) :
@@ -546,13 +521,14 @@ Lemma VTypingFun0_lemma (ftenv: funTC) (fenv: funEnv)
   intros.
   destruct f.
   simpl.
-  eapply FunTyping0_lemma.
-  exact X.
-  eassumption.
-  eassumption.
+  destruct v.
+  destruct v0.
+  simpl in H1.
+  inversion H1; subst.
+  unfold VTyping.
+  unfold valueVTyp.
   simpl.
-  auto.
-  assumption.
+  reflexivity.
 Defined.  
 
 
@@ -593,13 +569,453 @@ Lemma mkVEnv_typing_lemma (f: Fun) (pt: PTyp) (t: VTyp) (vs: list Value) :
   destruct p.
   simpl in *.
   inversion X0; subst.
-  inversion X2; subst.
+  inversion H2; subst.
   simpl in *.
   inversion IHvs.
   rewrite H at 1.
   auto.
 Defined.
 
+
+Lemma mkVEnv_typing_lemma1 (ftenv: funTC) (tenv: valTC)
+      (f: Fun) (pt: PTyp) (t: VTyp) (vs: list Value) :
+  funFTyp f = FT pt t ->
+  PrmsTyping ftenv tenv (PS (map Val vs)) pt ->
+  EnvTyping (mkVEnv (funValTC f) vs) (funValTC f).
+  destruct f.
+  unfold mkVEnv.
+  unfold funValTC.
+  unfold funFTyp.
+  intros.
+  inversion H; subst; clear H.
+
+  dependent induction X.
+  symmetry in x0.
+  eapply map_eq_nil in x0.
+  inversion x0; subst.
+  clear H.
+  symmetry in x.
+  eapply map_eq_nil in x.
+  inversion x; subst.
+  clear H.
+  simpl.
+  constructor.
+  destruct vs.
+  simpl in x0.
+  inversion x0.
+  destruct tenv0.
+  simpl in x.
+  inversion x.
+  simpl in *.
+  specialize (IHX tenv0 vs).
+  inversion x0; subst.
+  inversion x; subst.
+  specialize (IHX eq_refl eq_refl).
+  destruct p.
+  simpl in *.
+  unfold EnvTyping.
+  unfold MatchEnvs.
+  simpl.
+  unfold thicken.
+  simpl.
+  inversion e1; subst.
+  inversion H2; subst.
+  inversion IHX; subst.
+  unfold thicken.
+  rewrite H at 1.
+  reflexivity.
+Defined.  
+
+
+Lemma mkVEnv_typing_lemma2 (ftenv: funTC) (tenv tenv0: valTC)
+      (vs: list Value) :
+  PrmsTyping ftenv tenv (PS (map Val vs)) (PT (map snd tenv0)) ->
+  EnvTyping (mkVEnv tenv0 vs) tenv0.
+  unfold mkVEnv.
+  intros.
+(*  
+  unfold EnvTyping.
+  unfold MatchEnvs.
+*)
+  dependent induction X.
+  symmetry in x0.
+  eapply map_eq_nil in x0.
+  inversion x0; subst.
+  clear H.
+  symmetry in x.
+  eapply map_eq_nil in x.
+  inversion x; subst.
+  clear H.
+  simpl.
+  constructor.
+  destruct vs.
+  simpl in x0.
+  inversion x0.
+  destruct tenv0.
+  simpl in x.
+  inversion x.
+  simpl in *.
+  specialize (IHX tenv0 vs).
+  inversion x0; subst.
+  inversion x; subst.
+  specialize (IHX eq_refl eq_refl).
+  destruct p.
+  simpl in *.
+  unfold EnvTyping.
+  unfold MatchEnvs.
+  simpl.
+  unfold thicken.
+  simpl.
+  inversion e0; subst.
+  inversion H2; subst.
+  inversion IHX; subst.
+  unfold thicken.
+  rewrite H at 1.
+  reflexivity.
+Defined.  
+
+
+(*******************************************************************)
+
+
+Lemma mkVEnv_lemma1 (ftenv: funTC) (tenv: valTC)
+          (f: Fun) (vs: list Value) :
+  PrmsTyping ftenv tenv (PS (map Val vs))
+             (PT (map snd (funValTC f))) ->  
+  EnvTyping (mkVEnv (funValTC f) vs) (funValTC f).
+  destruct f.
+  simpl.
+  intros.
+  dependent induction X.
+  symmetry in x0.
+  eapply map_eq_nil in x0.
+  symmetry in x.
+  eapply map_eq_nil in x.
+  inversion x0; subst.
+  unfold mkVEnv.
+  simpl.
+  reflexivity.
+  destruct vs.
+  simpl in x0.
+  inversion x0.
+  destruct tenv0.
+  simpl in x.
+  inversion x.
+  simpl in x0, x.
+  inversion x0; subst.
+  inversion x; subst.
+  specialize (IHX tenv0 vs eq_refl eq_refl).
+  unfold mkVEnv.
+  simpl.
+  unfold EnvTyping.
+  unfold MatchEnvs.
+  simpl.
+  destruct p.
+  simpl.
+  inversion e1; subst.
+  unfold VTyping in H2.
+  simpl in H2.
+  unfold thicken.
+  simpl.
+  rewrite H2.
+  f_equal.
+  exact IHX.
+Defined.  
+
+Lemma mkVEnv_lemma2a (ftenv: funTC) (tenv tenv0: valTC) (vs: list Value) :
+  PrmsTyping ftenv tenv (PS (map Val vs)) (PT (map snd tenv0)) ->
+  valEnv2valTC (mkVEnv tenv0 vs) = tenv0.
+  intros.
+  unfold valEnv2valTC.
+  unfold mkVEnv.
+  dependent induction X.
+  symmetry in x0.
+  eapply map_eq_nil in x0.
+  symmetry in x.
+  eapply map_eq_nil in x.
+  inversion x0; subst.
+  simpl.
+  reflexivity.
+  destruct vs.
+  simpl in x0.
+  inversion x0.
+  destruct tenv0.
+  simpl in x.
+  inversion x.
+  simpl in x0, x.
+  inversion x0; subst.
+  inversion x; subst.
+  specialize (IHX tenv0 vs eq_refl eq_refl).
+  destruct p.
+  simpl.
+  inversion e0; subst.
+  unfold VTyping in H2.
+  simpl in H2.
+  unfold thicken.
+  simpl.
+  rewrite H2.
+  f_equal.
+  exact IHX.
+Defined.  
+
+
+Lemma mkVEnv_lemma2 (ftenv: funTC) (tenv tenv0: valTC)
+              (vs: list Value) :
+  PrmsTyping ftenv tenv (PS (map Val vs))
+             (PT (map snd tenv0)) ->  
+  EnvTyping (mkVEnv tenv0 vs) tenv0.
+  simpl.
+  intros.
+  dependent induction X.
+  symmetry in x0.
+  eapply map_eq_nil in x0.
+  symmetry in x.
+  eapply map_eq_nil in x.
+  inversion x0; subst.
+  unfold mkVEnv.
+  simpl.
+  reflexivity.
+  destruct vs.
+  simpl in x0.
+  inversion x0.
+  destruct tenv0.
+  simpl in x.
+  inversion x.
+  simpl in x0, x.
+  inversion x0; subst.
+  inversion x; subst.
+  specialize (IHX tenv0 vs eq_refl eq_refl).
+  unfold mkVEnv.
+  simpl.
+  unfold EnvTyping.
+  unfold MatchEnvs.
+  simpl.
+  destruct p.
+  simpl.
+  inversion e0; subst.
+  unfold VTyping in H2.
+  simpl in H2.
+  unfold thicken.
+  simpl.
+  rewrite H2.
+  f_equal.
+  exact IHX.
+Defined.  
+
+Lemma prms_helper1 (ftenv: funTC) (tenv tenv0: valTC) (vs: list Value) :
+    PrmsTyping ftenv tenv (PS (map Val vs)) (PT (map snd tenv0)) -> 
+    ( valEnv2valTC (interleave (map fst tenv0) vs) = tenv0 ).
+    intros.
+    dependent induction X.
+    symmetry in x0.
+    eapply map_eq_nil in x0.
+    inversion x0; subst.
+    symmetry in x.
+    eapply map_eq_nil in x.
+    inversion x; subst.
+    simpl.
+    reflexivity.
+    destruct vs.
+    simpl in x0.
+    inversion x0.
+    destruct tenv0.
+    simpl in x.
+    inversion x.
+    simpl in x0, x.
+    inversion x0; subst.
+    inversion x; subst.
+    clear x x0.
+    simpl in *.
+    destruct p.
+    unfold thicken.
+    simpl.
+    simpl in e0.
+    destruct v.
+    destruct v.
+    destruct v0.
+    simpl in *.
+    inversion e0; subst.
+    inversion H2; subst.
+    unfold valueVTyp in H.
+    simpl in H.
+    inversion H; subst.
+    f_equal.
+    eapply IHX.
+    reflexivity.
+    reflexivity.
+Defined.    
+     
+
+(********************************************************************)
+
+Lemma find_simpl1 (x: Id) (t: VTyp) :
+    forall (env: valEnv), findE ((x, t) :: valEnv2valTC env) x =
+                          Some t.
+  intros.
+  simpl.
+  destruct (IdT.IdEqDec x x).
+  auto.
+  intuition.
+Defined.
+
+
+Lemma lengthVal (ls: list Value) : length (map Val ls) = length ls.   
+  induction ls.
+  simpl.
+  auto.
+  simpl in *.
+  rewrite IHls.
+  auto.
+Defined.  
+
+
+(*********************************************************************)
+
+(** lemmas about parameter typing *)
+
+Definition vlsTyping (vs: list Value) (pt: list VTyp) : Type :=
+           Forall2T VTyping vs pt.
+
+
+Lemma prmsTypingAux_T (fps : valTC) (vls : list Value)
+                       (h: length fps = length vls):
+          vlsTyping vls (map snd fps) ->
+                         MatchEnvsT VTyping (mkVEnv fps vls) fps.
+Proof.
+  unfold mkVEnv.
+  intros.
+  apply prmsTypingAux2_T.
+  auto.
+  eapply prmsTypingAux1_T.
+  auto.
+  auto.
+Defined.
+
+
+
+Lemma Exp2ValueTyping 
+      (ftenv: funTC) (tenv: valTC) 
+      (v: Value) (t: VTyp) :
+  ExpTyping ftenv tenv (Val v) t ->
+  VTyping v t.
+Proof.
+  intros.
+  inversion X; subst.
+  exact H2.
+Defined.
+
+Lemma Exp2ValueTypingA 
+      (ftenv: funTC) (tenv: valTC) 
+      (v: Value) (t: VTyp) :
+  ExpTyping ftenv tenv (Val v) t ->
+  ExpTyping emptyE emptyE (Val v) t.
+Proof.
+intro.
+constructor.
+eapply Exp2ValueTyping.
+eassumption.
+Defined.
+
+
+Lemma Value2ExpTyping 
+      (ftenv: funTC) (tenv: valTC) 
+      (v: Value) (t: VTyp) :
+  VTyping v t ->
+  ExpTyping ftenv tenv (Val v) t.
+Proof.
+  intros.
+  inversion H; subst.
+  constructor.
+  exact H.
+Defined.  
+
+
+Lemma prmsTypingAux01_T 
+      (ftenv: funTC) (tenv: valTC)
+      (vs: list Value) (ts: list VTyp) :
+          vlsTyping vs ts ->
+          PrmsTyping ftenv tenv (PS (map Val vs)) (PT ts).
+Proof.
+  unfold vlsTyping.
+  intros.
+  induction X.
+  constructor.
+  constructor.
+  constructor.
+  exact r.
+  exact IHX.
+Defined.
+
+
+Lemma matchListsAux02_T1 
+      (ftenv: funTC) (tenv: valTC) 
+                       (ts: list VTyp)
+                       (es : list Exp) (vs : list Value) : 
+  isValueList2T es vs -> 
+  PrmsTyping ftenv tenv (PS es) (PT ts) -> 
+  vlsTyping vs ts.
+Proof.
+  unfold vlsTyping.
+  unfold isValueList2T.
+  intros.
+  inversion H; subst.
+  clear H0.
+  dependent induction X.
+  symmetry in x.
+  eapply map_eq_nil in x.
+  rewrite x.
+  constructor.
+  destruct vs.
+  simpl in x.
+  inversion x.
+  simpl in x.
+  inversion x; subst. 
+  constructor.
+  inversion e0; subst.
+  exact H2.
+  eapply IHX.
+  reflexivity.
+  reflexivity.
+Defined.  
+
+
+Program Definition matchListsAux02_T 
+      (ftenv: funTC) (tenv: valTC) 
+                       (ts: list VTyp)
+                       (es : list Exp) (vs : list Value) : 
+  isValueList2T es vs -> 
+  PrmsTyping ftenv tenv (PS es) (PT ts) -> 
+  vlsTyping vs ts := _.
+
+Next Obligation.
+  unfold vlsTyping.
+  unfold isValueList2T in X.
+  rewrite X in *.
+  clear X.
+  clear es.
+  revert X0.
+  revert ts.
+  induction vs.
+  intros.
+  inversion X0; subst.
+  constructor.
+  intros.
+  inversion X0; subst.
+  econstructor.
+  inversion X; subst.
+  exact H2.
+  eapply IHvs.
+  exact X1.
+Defined.  
+  
+(*********************************************************************)
+
+Lemma prod_eq {T1 T2 T3 T4: Type} (te1: T1 = T2) (te2: T3 = T4) :
+  T1 * T3 = T2 * T4.
+  rewrite te1.
+  rewrite te2.
+  reflexivity.
+Defined.  
 
 End StaticSem.
 
