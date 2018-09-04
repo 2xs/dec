@@ -1,26 +1,37 @@
 
 ## Synopsis
 
-This projects contains the definition and the development of DEC, a
-functional imperative language with bounded recursion and generic
-side-effects embedded in Coq.
+This project contains the development of the two distinct languages,
+DEC1 and DEC2, both functional imperative languages with bounded
+recursion and generic side-effects, deeply embedded in Coq. Both
+languages are specified in terms of small-step semantics (SOS).
 
-DEC has been designed as an intermediate language to support the
-translation to C of the Pip protokernel
-(https://github.com/2xs/pipcore).
+The DEC languages have been designed as intermediate languages to
+support the translation to C of the Pip protokernel (Pip is available
+at https://github.com/2xs/pipcore).
 
-## Version
+The development of DEC1 includes a Hoare logic and a verification case
+study discussed in a VSTTE 2018 paper (see the documentation).
 
-DEC 1.0 language specification, implemented in Coq 8.6.
+DEC2 includes a proof of the adequacy of its reflection in Gallina
+with respect to its operational semantics.
+
+
+## Coq version
+
+Coq 8.6.
 
 ## Content
 
-* src/langspec: language definition 
+* src/langspec: language definition of DEC1
 
-* src/DEC1: full language development with proofs 
-            and case study on the verification of Pip invariants
-  
-## VSTTE 2018 submission
+* src/DEC1: full language development of DEC1 with 
+            case study on the verification of Pip invariants
+
+* src/DEC2: full language development of DEC2 
+
+
+## VSTTE 2018 submission (on DEC1)
 
 see src/DEC1/README.md
 
@@ -51,13 +62,17 @@ see src/DEC1/README.md
 * run './makedoc' to generate the pdf documentation (in doc, requires
   pdflatex) and the coqdoc html documentation (in coqdoc)
 
-## Building the full language inclusive of case study and tests
+## Building DEC1, inclusive of case study and tests
 
   go to src/DEC1/ and run 'make'
 
+## Building DEC2
+
+  go to src/DEC2/ and run 'make'
+
 ## Contributors
 
-The developers of DEC are
+The developers of DEC1 are
 
 * Paolo Torrini <paolo.torrini@univ-lille1.fr>
 
@@ -68,6 +83,10 @@ Case study contributors:
 * Mohamed Sami Cherif <mohamedsami.cherif@yahoo.com>
 
 * Narjes Jomaa <Narjes.Jomaa@univ-lille1.fr>
+
+
+DEC2 is developed by Paolo Torrini.
+
 
 ## Licence
 
