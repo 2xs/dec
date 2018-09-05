@@ -964,7 +964,7 @@ Defined.
 
 (**********************************************************************)
 
-Lemma magick1 (f: Fun) (env: valEnv) (k1: EnvTyping env (funValTC f)) :
+Lemma deptyp_aux1 (f: Fun) (env: valEnv) (k1: EnvTyping env (funValTC f)) :
   valTC_Trans (valEnv2valTC env) = tlist2type (fst (FTyp_TRN (funFTyp f))).   
   unfold valTC_Trans.
   unfold FTyp_TRN.
@@ -987,7 +987,7 @@ Lemma magick1 (f: Fun) (env: valEnv) (k1: EnvTyping env (funValTC f)) :
   reflexivity.
 Defined.  
 
-Lemma magick2 (f: Fun) :
+Lemma deptyp_aux2 (f: Fun) :
   sVTyp (projT1 (fun0Exp f)) = snd (FTyp_TRN (funFTyp f)).
   destruct f.
   simpl.
@@ -1010,25 +1010,25 @@ Lemma extract_from_funTC_Trans4AA (fenv: funEnv)
           forall s: W, I (match te1 with eq_refl => ValEnvTRN env end) (s, 0) =
                match te2 with eq_refl => (sValue (fun0Exp f), (s, 0)) end).
   intros.
-  replace te1 with (magick1 f env m).
+  replace te1 with (deptyp_aux1 f env m).
   clear te1.
-  replace te2 with (magick2 f).
+  replace te2 with (deptyp_aux2 f).
   unfold FTyp_TRN2.
   unfold FType_mk2.
   econstructor 1 with (x:= preZero f).
   intros.
   unfold preZero.
   destruct f.
-  unfold magick2.
+  unfold deptyp_aux2.
   reflexivity.
   
-  unfold magick2.
+  unfold deptyp_aux2.
   destruct f.
   dependent destruction te2.
   auto.
 
   destruct f.
-  destruct (magick1 (FC tenv v e) env m).
+  destruct (deptyp_aux1 (FC tenv v e) env m).
   dependent destruction te1.
   reflexivity.
 Defined.  
@@ -1036,7 +1036,7 @@ Defined.
 (*********************************************************************)
 
 
-Lemma magick11 (tenv: valTC) (vs: list Value) :
+Lemma deptyp_aux11 (tenv: valTC) (vs: list Value) :
       tenv = map (thicken Id valueVTyp) (mkVEnv tenv vs) ->
       (PTyp_TRN (PT (map snd tenv)) =
        valTC_Trans (valEnv2valTC (mkVEnv tenv vs))).
@@ -1063,7 +1063,7 @@ Proof.
 Defined.    
 
 
-Lemma magick12 (fenv: funEnv) (env: valEnv) (tenv0: valTC)
+Lemma deptyp_aux12 (fenv: funEnv) (env: valEnv) (tenv0: valTC)
       (vs: list Value)
       (kp: PrmsTyping (funEnv2funTC fenv)
                       (valEnv2valTC env) (PS (map Val vs)) (PT (map snd tenv0)))
@@ -1090,14 +1090,14 @@ Lemma magick12 (fenv: funEnv) (env: valEnv) (tenv0: valTC)
   eapply mkVEnv_lemma2.
   eauto.
 (*  inversion kp. *)
-  rewrite <- (magick11 tenv0 vs k).
+  rewrite <- (deptyp_aux11 tenv0 vs k).
   intro.
   dependent destruction qq.
   auto.
 Defined.
 
 
-Lemma magick13 (fenv: funEnv) (env: valEnv) (tenv0: valTC)
+Lemma deptyp_aux13 (fenv: funEnv) (env: valEnv) (tenv0: valTC)
       (vs: list Value)
       (kp: PrmsTyping (funEnv2funTC fenv)
                       (valEnv2valTC env) (PS (map Val vs)) (PT (map snd tenv0)))
@@ -1124,7 +1124,7 @@ Lemma magick13 (fenv: funEnv) (env: valEnv) (tenv0: valTC)
   assert (tenv0 = map (thicken Id valueVTyp) (mkVEnv tenv0 vs)) as k.
   eapply mkVEnv_lemma2.
   eauto.
-  rewrite <- (magick11 tenv0 vs k).
+  rewrite <- (deptyp_aux11 tenv0 vs k).
   intro.
   
   dependent destruction qq.
@@ -1134,7 +1134,7 @@ Defined.
 
 (*************************************************************************)
 
-Lemma magick3a (f: Fun) (vs: list Value)
+Lemma deptyp_aux3a (f: Fun) (vs: list Value)
           (k: vlsTyping vs (map snd (funValTC f))) :
            valTC_Trans (valEnv2valTC (mkVEnv (funValTC f) vs)) =
            tlist2type (fst (FTyp_TRN (funFTyp f))).
@@ -1164,7 +1164,7 @@ Lemma magick3a (f: Fun) (vs: list Value)
   reflexivity.
 Defined.
 
-Lemma magick3b (f: Fun) (vs: list Value)
+Lemma deptyp_aux3b (f: Fun) (vs: list Value)
           (k: vlsTyping vs (map snd (funValTC f))) :
            valTC_Trans (valEnv2valTC (mkVEnv (funValTC f) vs)) =
            tlist2type (fst (FTyp_TRN (funFTyp f))).
@@ -1208,7 +1208,7 @@ Lemma magick3b (f: Fun) (vs: list Value)
   exact X.
 Defined.  
   
-Lemma magick3c (f: Fun) (vs: list Value)
+Lemma deptyp_aux3c (f: Fun) (vs: list Value)
           (k: vlsTyping vs (map snd (funValTC f))) :
            valTC_Trans (valEnv2valTC (mkVEnv (funValTC f) vs)) =
            tlist2type (fst (FTyp_TRN (funFTyp f))).
@@ -1247,7 +1247,7 @@ Lemma magick3c (f: Fun) (vs: list Value)
 Defined.  
 
 
-Lemma magick3d (tenv : valTC) (vs: list Value)
+Lemma deptyp_aux3d (tenv : valTC) (vs: list Value)
           (k: vlsTyping vs (map snd tenv)) :
            valTC_Trans (valEnv2valTC (mkVEnv tenv vs)) =
            tlist2type (map (fun t : VTyp => sVTyp t) (map snd tenv)).
@@ -1287,7 +1287,7 @@ Lemma magick3d (tenv : valTC) (vs: list Value)
 Defined.  
 
 
-Lemma magick4 (tenv: valTC) (vs: list Value)
+Lemma deptyp_aux4 (tenv: valTC) (vs: list Value)
     (kp: Forall2T VTyping vs (map snd tenv)) : 
     tlist2type
           (map (fun t : VTyp => sVTyp t)
@@ -1399,7 +1399,7 @@ Lemma eval_vls_aux1 (fenv: funEnv) (env: valEnv) (f: Fun)
           (map (fun t : VTyp => sVTyp t)
                (map snd (valEnv2valTC (interleave (map fst tenv) vs)))) =
           tlist2type (map (fun t : VTyp => sVTyp t) (map snd tenv))) as S4.
-  eapply magick4.
+  eapply deptyp_aux4.
   exact kp3.
   destruct v0.
   destruct v0.
@@ -1414,7 +1414,7 @@ Lemma eval_vls_aux1 (fenv: funEnv) (env: valEnv) (f: Fun)
 
     generalize (ValEnvTRN (interleave (map fst tenv) vs)).
     generalize S4.
-    erewrite <- (magick4 tenv vs kp3).
+    erewrite <- (deptyp_aux4 tenv vs kp3).
     intros.
     dependent destruction S0.
     unfold prod_eq.
@@ -1502,7 +1502,7 @@ Lemma eval_vls_aux2 (fenv: funEnv) (env: valEnv)
           (map (fun t : VTyp => sVTyp t)
                (map snd (valEnv2valTC (interleave (map fst tenv0) vs)))) =
           tlist2type (map (fun t : VTyp => sVTyp t) (map snd tenv0))) as S4.
-  eapply magick4.
+  eapply deptyp_aux4.
   exact kp3.
   destruct v.
   destruct v.
@@ -1517,7 +1517,7 @@ Lemma eval_vls_aux2 (fenv: funEnv) (env: valEnv)
 
     generalize (ValEnvTRN (interleave (map fst tenv0) vs)).
     generalize S4.
-    erewrite <- (magick4 tenv0 vs kp3).
+    erewrite <- (deptyp_aux4 tenv0 vs kp3).
     intros.
     dependent destruction S0.
     unfold prod_eq.
