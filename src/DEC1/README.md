@@ -59,7 +59,7 @@ Contributors: Cherif (main), Torrini, Jomaa
 
 refactored code from https://github.com/2xs/pipcore
 
-Contributors: Jomaa (main) and Nowak (original code), refactored by Cherif
+Contributors for the original code: Jomaa (main), Nowak; refactored by Cherif
 
 * Lib.v, Pip_DependentTypeLemmas.v, Pip_InternalLemmas.v, Pip_Prop.v,
   Pip_stateLib.v, Pip_writeVirtualInv_Lemmas.v
