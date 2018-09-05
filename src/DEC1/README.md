@@ -2,13 +2,13 @@
 ## Synopsis
 
 This projects contains the full development of DEC1, and a case study
-on the verification of Pip invariants.
+on the verification of Pip invariants (artifact for the VSTTE18 paper). 
 
 ## Version
 
 DEC1 language development, implemented in Coq 8.6.
 
-## Building the project
+## Building the project 
 
   run 'make'
 

@@ -11,7 +11,8 @@ support the translation to C of the Pip protokernel (Pip is available
 at https://github.com/2xs/pipcore).
 
 The development of DEC1 includes a Hoare logic and a verification case
-study discussed in a VSTTE 2018 paper (see the documentation).
+study discussed in a VSTTE 2018 paper (see the documentation folder
+for a version of the paper and the slides).
 
 DEC2 includes a proof of the adequacy of its reflection in Gallina
 with respect to its operational semantics.
@@ -31,7 +32,7 @@ Coq 8.6.
 * src/DEC2: full language development of DEC2 
 
 
-## VSTTE 2018 submission (on DEC1)
+## VSTTE 2018 artifact (DEC1)
 
 see src/DEC1/README.md
 
@@ -55,14 +56,14 @@ see src/DEC1/README.md
 
    see src/DEC1/README.md
 
-## Building the language specification
+## Building documentation and language specification
 
 * run './make2file' to create the Makefile, then 'make' to build the project
 
 * run './makedoc' to generate the pdf documentation (in doc, requires
   pdflatex) and the coqdoc html documentation (in coqdoc)
 
-## Building DEC1, inclusive of case study and tests
+## Building DEC1
 
   go to src/DEC1/ and run 'make'
 
@@ -74,13 +75,13 @@ see src/DEC1/README.md
 
 The developers of DEC1 are
 
-* Paolo Torrini <paolo.torrini@univ-lille1.fr>
+* Paolo Torrini <paolo.torrini@univ-lille1.fr> 
 
 * David Nowak <david.nowak@univ-lille1.fr>
 
 Case study contributors:
 
-* Mohamed Sami Cherif <mohamedsami.cherif@yahoo.com>
+* Mohamed Sami Cherif <mohamedsami.cherif@yahoo.com> 
 
 * Narjes Jomaa <Narjes.Jomaa@univ-lille1.fr>
 
