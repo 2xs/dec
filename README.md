@@ -36,7 +36,7 @@ Coq 8.6.
 
 see src/DEC1/README.md
 
-## Coq modules in src/langspec
+## Coq modules in src/langspec (DEC1)
 
 * EnvLib.v: auxiliary library
 
@@ -56,7 +56,7 @@ see src/DEC1/README.md
 
    see src/DEC1/README.md
 
-## Building documentation and language specification
+## Building DEC1 documentation and language specification
 
 * run './make2file' to create the Makefile, then 'make' to build the project
 
