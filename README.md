@@ -44,7 +44,7 @@ see src/DEC1/README.md
 
 * BaseMod.v: base module
 
-* LangSpec.v: language specification including
+* LangSpec.v: DEC1 language specification including
 
   + syntax definition
 
