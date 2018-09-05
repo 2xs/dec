@@ -1,12 +1,12 @@
 
 ## Synopsis
 
-This projects contains the full development of DEC, and a case study
+This projects contains the full development of DEC1, and a case study
 on the verification of Pip invariants.
 
 ## Version
 
-DEC 1.0 language development, implemented in Coq 8.6.
+DEC1 language development, implemented in Coq 8.6.
 
 ## Building the project
 
@@ -26,7 +26,7 @@ Contributors: Torrini (main), Nowak
 
 * main proofs and interpreter: WeakenA.v, SReducA.v, TSoundnessA.V, DetermA.v, STypingA.v, SOS2GallinaB.v
 
-* DEC libraries: AbbrevA.v, InvertA,v, DECauxB.v
+* DEC1 libraries: AbbrevA.v, InvertA,v, DECauxB.v
 
 ## Code extraction
 
@@ -48,7 +48,7 @@ Contributors: Torrini (main), Cherif
 
 ## Case study
 
-Contributors: Cherif (main), Jomaa, Torrini
+Contributors: Cherif (main), Torrini, Jomaa
 
 * module: IdModPip.v
 
@@ -57,9 +57,9 @@ Contributors: Cherif (main), Jomaa, Torrini
 
 ## Case study: modules imported from Pip
 
-refactoring of code from https://github.com/2xs/pipcore
+refactored code from https://github.com/2xs/pipcore
 
-Contributors: Jomaa (main), Nowak, refactoring by Cherif
+Contributors: Jomaa (main) and Nowak (original code), refactored by Cherif
 
 * Lib.v, Pip_DependentTypeLemmas.v, Pip_InternalLemmas.v, Pip_Prop.v,
   Pip_stateLib.v, Pip_writeVirtualInv_Lemmas.v
@@ -74,7 +74,7 @@ Contributors: Torrini, Cherif, Nowak
 
 ## Contributors
 
-for the development of DEC:
+for the development of DEC1:
 
 * Paolo Torrini <paolo.torrini@univ-lille1.fr>
 
