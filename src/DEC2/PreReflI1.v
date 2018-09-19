@@ -610,10 +610,10 @@ Program Definition SuccTRN_step (fenv: funEnv) :
   forall (fenv1: funEnv),
     (forall a, In a fenv1 -> In a fenv) ->
      tlist2type (map snd (FunTC_ListTrans (funEnv2funTC fenv1))) := _.
-Next Obligation.
+Next Obligation.  
   intros fenv D X fenv1.
   induction fenv1.
-  intros.
+  intros.  
   simpl in *.
   exact tt.
   intro H.

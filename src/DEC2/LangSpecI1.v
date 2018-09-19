@@ -35,7 +35,8 @@ Record XFun (T1 T2: VTyp) : Type := {
     x_eval : inpT -> W -> outT :=
       fun input state => fst (x_mod input state) ;        
     x_exec : inpT -> W -> W :=
-      fun input state => snd (x_mod input state) 
+      fun input state => snd (x_mod input state) ;
+    x_name : Id ;
 }.                                                     
 
 (** Value expressions *)
@@ -226,26 +227,26 @@ Definition NoRet (e: Exp) : Exp := BindN e Skip.
 Definition PStateV := VT (PState W) (CPtr (CInt I8 Unsigned)).
 
 
-Definition xf_read {t: VTyp} (f: W -> sVTyp t) : XFun Unit t := {|
-   x_mod := fun _ x => (f x, x)     
+Definition xf_read {t: VTyp} (f: W -> sVTyp t) (x: Id) : XFun Unit t := {|
+   x_mod := fun _ x => (f x, x); x_name := x     
 |}.                                                     
 
-Definition xf_write {t: VTyp} (f: sVTyp t -> W) : XFun t Unit := {|
-   x_mod := fun x _ => (sValue (cst Unit tt), f x)     
+Definition xf_write {t: VTyp} (f: sVTyp t -> W) (x: Id) : XFun t Unit := {|
+   x_mod := fun x _ => (sValue (cst Unit tt), f x); x_name := x     
 |}.                                                     
 
-Definition xf_reset : XFun PStateV Unit := {|
-   x_mod := fun _ x => (sValue (cst Unit tt), b_init)     
+Definition xf_reset (x: Id) : XFun PStateV Unit := {|
+   x_mod := fun _ x => (sValue (cst Unit tt), b_init); x_name := x     
 |}.                                                     
 
-Definition Read (t: VTyp) (f: W -> sVTyp t) : Exp :=
-  Modify Unit t (xf_read f) (Val (cst Unit tt)).
+Definition Read (t: VTyp) (f: W -> sVTyp t) (x: Id) : Exp :=
+  Modify Unit t (xf_read f x) (Val (cst Unit tt)).
 
-Definition Write (t: VTyp) (f: sVTyp t -> W) (e: Exp) : Exp :=
-  Modify t Unit (xf_write f) e.
+Definition Write (t: VTyp) (f: sVTyp t -> W) (e: Exp) (x: Id) : Exp :=
+  Modify t Unit (xf_write f x) e.
 
-Definition Reset : Exp :=
-  Modify PStateV Unit xf_reset (Val (cst PStateV WP)).
+Definition Reset (x: Id) : Exp :=
+  Modify PStateV Unit (xf_reset x) (Val (cst PStateV WP)).
 
 
 End LangSpec.

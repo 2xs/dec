@@ -23,7 +23,7 @@ Inductive intsize : Type :=
   | I8: intsize
   | I16: intsize
   | I32: intsize
-  | I64: intsize         
+(*  | I64: intsize *)        
   | IBool: intsize.
 
 Inductive CTyp : Type :=
