@@ -15,7 +15,8 @@ study discussed in a VSTTE 2018 paper (see the documentation folder
 for a version of the paper and the slides).
 
 DEC2 includes a proof of the adequacy of its reflection in Gallina
-with respect to its operational semantics.
+with respect to its operational semantics, and its translation to
+CompCert C (using CompCert-3.0.1).
 
 
 ## Coq version
@@ -29,7 +30,8 @@ Coq 8.6.
 * src/DEC1: full language development of DEC1 with 
             case study on the verification of Pip invariants
 
-* src/DEC2: full language development of DEC2 
+* src/DEC2: full language development of DEC2 with
+            translation to CompCert C
 
 
 ## VSTTE 2018 artifact (DEC1)
@@ -56,6 +58,10 @@ see src/DEC1/README.md
 
    see src/DEC1/README.md
 
+## Information on modules in src/DEC2
+
+   see src/DEC2/README.md
+
 ## Building DEC1 documentation and language specification
 
 * run './make2file' to create the Makefile, then 'make' to build the project
@@ -63,30 +69,31 @@ see src/DEC1/README.md
 * run './makedoc' to generate the pdf documentation (in doc, requires
   pdflatex) and the coqdoc html documentation (in coqdoc)
 
-## Building DEC1
+## Building DEC1 (see DEC1/README.md)
 
   go to src/DEC1/ and run 'make'
 
-## Building DEC2
+## Building DEC2 (see DEC2/README.md) 
 
   go to src/DEC2/ and run 'make'
 
 ## Contributors
 
+
 The developers of DEC1 are
 
-* Paolo Torrini <paolo.torrini@univ-lille1.fr> 
+* Paolo Torrini <paolo.torrini@univ-lille.fr> 
 
-* David Nowak <david.nowak@univ-lille1.fr>
+* David Nowak <david.nowak@univ-lille.fr>
 
 Case study contributors:
 
 * Mohamed Sami Cherif <mohamedsami.cherif@yahoo.com> 
 
-* Narjes Jomaa <Narjes.Jomaa@univ-lille1.fr>
+* Narjes Jomaa <Narjes.Jomaa@univ-lille.fr>
 
 
-DEC2 is developed by Paolo Torrini.
+The developer of DEC2 is Paolo Torrini <ptorrx@gmail.com>
 
 
 ## Licence
