@@ -1,0 +1,199 @@
+(Semi-)formal plan for the translation from the SEC monadic fragment
+of Gallina back to DEC2 (meant for the Digger tool).
+
+------------- Preliminaries ----------------------------------------
+
+---- State
+
+S : Type
+
+---- Monad
+
+T : Type ==> MM T = S -> T * S
+
+
+------------- Translation of types ---------------------------------
+
+---- Types
+
+Trans_t {ct: CTyp} : Type -> VTyp
+
+T: Type, ct : CTyp ==> Trans_t T ct := VT T ct
+
+-- predefined
+
+Unit = Trans_t unit CVoid
+
+Nat = Trans_t nat (CInt I32 Unsigned)
+
+Bool = Trans_t bool (CInt IBool Unsigned)
+
+
+
+---- Function types
+
+Trans_ft : (list Type * Type) -> FTyp
+
+Trans_ft ([T_1, ..., T_k], T) :=
+          FTyp (PT (map Trans_t [T_1, .... T_k])) (Trans_t T)
+
+
+
+----------------- Translation of values and variables -----------
+
+---- Values
+
+Trans_v {T: Type, ct: CTyp} : T -> Value
+
+sv : T, ct : CTyp  ==> Trans_v sv := cst (Trans_t T ct) sv
+
+-- with predefined types
+
+sv : unit ==> Trans_v sv := cst Unit sv 
+
+sv : bool ==> Trans_v sv := cst Bool sv
+
+sv : nat  ==> Trans_v sv := cst Nat sv
+
+
+---- Local variables and function names
+
+Trans_i {ftenv : FEnv, tenv : TEnv} : _ -> Id
+
+
+
+------- Translation of signatures, environments and side effects
+
+---- Function signatures
+
+Trans_sig fdef : (_, (list Type, Type))
+  where
+  fdef = (Fixpoint fx (x_1:T_1) ... (x_k:T_k) : T := def_body)
+
+Trans_sig fdef := (Trans_i fx, Trans_ft ([T_1, ..., T_k], T))
+
+name_of fdef := fx
+
+
+---- Environments
+
+-- global function typing context
+FTEnv := list (Id * FTyp)
+
+fdef_1, ..., fdef_k ==> Trans_ftenv [fdef_1, ..., fdef_k] :=
+   [Trans_sig fdef_1, ..., Trans_sig fdef_k]
+
+
+-- local value typing context
+TEnv := list (Id * VTyp)
+
+T_1, ..., T_k, (x_1, ..., x_k : Id) ==>
+   Trans_tenv [x_1, ... x_k] (T_1, ..., T_k) =
+   [(x_1, Trans_t T_1), ..., (x_k, Trans_t T_k)]
+
+
+-- local value environment
+Env := list (Id * Value)
+
+sv_1, ..., sv_k, (x_1, ..., x_k : Id) ==>
+   Trans_env [x_1, ... x_k] (sv_1, ..., sv_k) =
+   [(x_1, Trans_v sv_1), ..., (x_k, Trans_v sv_k)]
+
+
+---- Action (side effects)
+
+Trans_a {T1 T2 : Type} : (T1 -> S -> T2 * S) -> XFun (Trans_t T1) (Trans_t T2)
+
+f : S -> T1 -> S * T2 ==> Trans_a f = {| x_mod := f |}
+        
+
+
+
+---------- Translation of expressions and parameters (by mutual recursion)
+
+---- Expressions
+
+Trans_e {T : Type, ct : Ctyp} : MM T -> FTEnv -> TEnv -> Exp
+
+sv : T ==> Trans_e nil nil (ret sv) := Val (Trans_v sv)
+
+se : MM T ==> Trans_e ftenv tenv (ret se) := Trans_e ftenv tenv se
+
+x : _ ==> Trans_e ftenv tenv x := Var (Trans_i x)
+
+se1 : MM T1, se2 : MM T2 ==> Trans_e ftenv tenv (se1 ; se2) :=
+        BindN (Trans_e ftenv tenv se1) (Trans_e ftenv tenv se2)
+
+se1 : MM T1, se2 : T1 -> MM T2, x : T1 ==>
+      Trans_e ftenv tenv (bind se1 se2) :=
+          BindS (Trans_i x) (Some (Trans_t T1)) (Trans_e ftenv tenv se1)
+	        (Trans_e ftenv ((Trans_i x, Trans_t T1)::tenv) (se2 x))
+
+ve1 : bool, se2 : MM T, se3 : MM T ==>
+      Trans_e fenv tenv (if se1 then se2 else se3) :=
+          IfThenElse (Trans_e ftenv tenv (ret ve1))
+	             (Trans_e ftenv tenv se2)
+                     (Trans_e ftenv tenv se3)
+
+
+fdef : T1 -> ... -> Tk -> MM T, fx = name_of fdef,
+se_1 : MM T1, ..., se_k : MM Tk ==>
+   Trans_e ftenv tenv (bind se_k (bind ... (bind se_1 fx)...)) :=
+       Apply (Trans_i fx) (Trans_ps ftenv tenv (se_1, ..., se_k)) Maxfuel
+where 
+   maxfuel : nat
+   Maxfuel : Value = cst Nat maxfuel
+
+
+f : T1 -> MM T2, ve : T1 ==> Trans_e fenv tenv (f ve) =
+          Modify (Trans_t T1) (Trans_t T2) (Trans_a f)
+	         (Trans_e fenv tenv (ret ve))
+
+
+---- Tuples of arguments 
+
+Trans_ps {[T_1, ..., T_k] : list Type} :
+   (MM T_1 * ... * MM T_k) -> PT (map Trans_t [T_1, ...., T_k])
+
+es_1: MM T_1, ..., es_k : MM T_k ==>
+      Trans_ps fenv tenv (es_1, ..., es_k) :=
+       PS ([Trans_e ftenv tenv es_1, ..., Trans_e ftenv tenv es_k])
+
+
+
+
+----------- Translation of functions and function environments 
+
+---- Functions
+
+Trans_f {T_1 ... T_k T : Type} (T_1 -> ... -> T_k -> MM T) : (Id, Fun)
+
+fdef_1, ..., fdef_k ==> 
+            Trans_f fded = (Trans_i fx, FC tenv def_body default)
+	    
+   where fdef is in [fdef_1, ..., fdef_k]
+   
+         fdef = (Fixpoint fx (x_1:T_1) ... (x_k:T_k) : T := def_body)
+
+         tenv = [(Trans_i x_1, Trans_t T_1), ...,
+	                      (Trans_i x_k, Trans_t T_k)] 
+
+         undef_T : T
+	 
+         Undef (T: Type) : Value = cst (Trans_t T) undef_T
+
+         default = Undef T
+
+         ftenv = Trans_ftenv (fdef_1, ..., fdef_k)
+
+         body = Trans_e ftenv tenv def_body
+	 
+
+-- global function environment
+FEnv := list (Id * Fun)
+
+fdef_1, ..., fdef_k ==> Trans_fenv (fdef_1, ..., fdef_k) :=
+             [Trans_f fdef_1, ..., Trans_f fedf_k ]
+
+
+
