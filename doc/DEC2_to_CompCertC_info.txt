@@ -1,0 +1,143 @@
+Translation of DEC2 to CompCert C
+- see functions defined in CTransI1.v
+---------------------------------------------------------------
+
+The translation can be used to generate CompCert C programs (of type
+program) from DEC2 ones.
+
+A DEC2 (closed) program consists of the following data
+
+   function_env : funEnv,
+   program_body : Exp,
+   default : Value,
+   program_type : VTyp
+
+plus a collection of records of type
+
+   t1 tw: Type |- XFun t1 t2 : Type
+
+Each record contains a name (of type Id) which needs to be
+non-ambiguous, and the definition of a primitive (a monadic function
+from t1 to t2); the name is not used in the DEC program, but is used
+in the translation to C.
+
+The top level function to translate a DEC2 program to CompCert C is
+the following.
+
+TopLevel (fuel_val: nat)
+         (named_primitives : list (Id * NamedDef))
+         (service_functions : funEnv)
+	 (service_functions_are_well_typed : FEnvWT service_functions)
+         (no_name_duplication_in_service_functions : noDup service_functions)
+         (default : Value)
+         (main_body : Exp)
+         (main_is_well_typed :
+	         FunWT _ (FC nil main_default main_body)) : program
+
+
+The named_primitives list needs to be built manually, by associating
+each XFun record name with the manually written translation of the
+corresponding primitive, inclusive a C name (of type ident). Any C
+name can be used, except for 1 (used as name of the global variable
+for the fuel, initialised with the translation of fuel_val), and for 2
+(used as name of the main).
+
+The service_function list is the list of the DEC2 mutually recursive
+functions that get automatically translated to C ones.
+
+The main is given by the translation of the non-recursive function
+
+  FC nil default main_body
+
+which when called will evaluate the translation of main_body unless
+the fuel is 0 (in which case it will return the translation of
+default).
+
+The fuel is translated to a global variable which gets decreased at
+each service function call. In order to get an overapproximation of
+the fuel, given nc as the overall number of top-level calls and mx as
+maximal bound on the recursive arguments, one can take
+
+   Sigma^{0 <= x <= mx} nc^x
+
+or simply (with nc > 1)
+
+   nc^(mx+1)
+
+---------------------------------------------------------------------
+
+Translation of DEC types:
+
+DEC value types, of type VTyp, are translated using the enclosed CTyp,
+depending on the naked shallow type.
+
+DEC function types are translated using the CompCert type typelist for
+the list of parameter types.
+
+
+Translation of values (see Val2C):
+
+  V2C : Value -> val 
+
+The translation of values (including Boolean ones) currently relies
+only on CompCert type Int.int.
+
+
+---------------------------------------------------------------------
+
+Translation scheme for expressions (informal) - see Exp2CC, Prms2CC:
+
+E2C {xfenv: list (Id * (ident * type * typelist))}
+    {fenv: list (Id * (ident * type * typelist))} :
+   (Id * ident * type) -> Exp -> ((Id * ident * type) * expr)
+
+P2C {xfenv: list (Id * (ident * type * typelist))}
+    {fenv: list (Id * (ident * type * typelist))} :
+   (Id * ident * type) -> list Expr -> ((Id * ident * type) * list expr)
+
+
+E2C env (Val v) = (env, Eval (V2C v))
+
+E2C env (Var x) = (env, Evar (find_c_name x env))
+
+E2C env (BindN e1 e2) = Ecomma (E2C env e1) (E2C env e2)
+
+E2C env (BindS x _ e1 e2) =
+    Ecomma (Eassign (Evar (new_c_var x)) (E2C env e1)) (E2C (update env) e2)
+
+E2C env (BindMS tenv e) =
+    Ecomma (multiple_assign env tenv) (E2C (update env) e)
+
+E2C env (IfThenElse e1 e2 e3) =
+    Econdition (E2C env e1) (E2C env e2) (E2C env e3)
+
+E2C env (Apply x ps _) = Ecall (Evar (find_c_name x fenv) (P2C)
+
+E2C env (Call x ps) = Ecall (Evar (find_c_name x fenv) (P2C ps)
+
+E2C env (Modify XF e) =
+   Ecall (Evar (find_c_name (name XF) xfenv)) (2list (E2C e))
+
+P2C env es = (env, map (E2C env) es)
+
+
+(******************************************************************)
+
+Translation scheme for functions - see Fun2CC
+
+F2C {xfenv: list (Id * (ident * type * typelist))}
+    {fenv: list (Id * (ident * type * typelist))} : Fun -> function
+
+F2C (FC tenv v e) = Ssequence
+                         decrease_fuel
+			 Sifthenelse (Ebinop Oeq fuel (Eval 0))
+			             (Sreturn (Some (Eval (V2C v))))
+				     (Sreturn (Some (D2C (valTC2C tenv) e)))
+where
+  fuel = Ederef (Evar 1)
+  decrease_fuel = Epostincr Decr fuel
+  valTC2C : valTC -> list (Id * ident * type)
+
+
+
+

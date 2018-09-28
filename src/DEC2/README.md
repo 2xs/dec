@@ -2,7 +2,12 @@
 ## Synopsis
 
 This projects contains the full development of DEC2, inclusive of its
-translation to CompCert C.
+reflection in Gallina and of its translation to CompCert C.
+
+An informal outline of the translation to CompCert C, that can be used
+to generate CompCert C programs from DEC2 ones, can be found in the
+documentation (DEC2_to_CompCertC_info.txt).
+
 
 ## Version
 
@@ -20,6 +25,15 @@ translation by
 
 If your CompCert has a different version or a different location you
 need to edit the Add LoadPath line of CTransI1.v. 
+
+You can run a set of test cases of the translation to CompCert C,
+first loading a testing module
+
+  coqc ModNat1I1.v
+
+and then running the tests
+
+  coqc CTestI1.v
 
 
 ## Language development
@@ -42,6 +56,8 @@ need to edit the Add LoadPath line of CTransI1.v.
   InterpBaseI1.v, InterpretI1.v
 
 * translation to CompCert C: CTransI1.v
+
+* testing: ModNat1I1.v. CTestI1.v
 
 
 ## Contributor
