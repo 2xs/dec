@@ -35,16 +35,16 @@ Coq 8.6.
 
 ## Documentation
 
-* doc: documentation on DEC1
-          DEC1_spec.tex (language specification)
-	  vstte2018.pdf (VSTTE 2018 paper)
-	  vstte2018_slides.pdf (VSTTE 2018 slides)
+* documentation on DEC1 in doc: 
+          DEC1_spec.tex (language specification),
+	  vstte2018.pdf (VSTTE 2018 paper),
+	  vstte2018_slides.pdf (VSTTE 2018 slides),
 	  MSCherif_project_report.pdf (BSc student project report)
 
-* doc: documentation on DEC2
-          ENTROPY18_DEC2_slides.pdf (ENTROPY 2018 slides on DEC2)
-          DEC2_notes.pdf (introduction and reflection in Gallina)
-	  DEC2_to_CompCertC_info_txt (translation to CompCert C)
+* documentation on DEC2 in doc: 
+          ENTROPY18_DEC2_slides.pdf (ENTROPY 2018 slides on DEC2),
+          DEC2_notes.pdf (introduction and reflection in Gallina),
+	  DEC2_to_CompCertC_info_txt (translation to CompCert C),
 	  Gallina_to_DEC2_spec.txt (on translating from Gallina to DEC2)
 
 ## VSTTE 2018 artifact (DEC1)
