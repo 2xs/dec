@@ -193,7 +193,7 @@ Proof.
 Defined.
   
 
-Program Definition ExpT11 (T: Type) (C: CTyp)    
+Program Definition ExpT11 (T: Type) (C: CTyp T)    
            (n: T) :
   ExpTyping [] [] (Val (existT ValueI (VT T C) (Cst (VT T C) n))) (VT T C) := _.
 Next Obligation.
@@ -205,7 +205,7 @@ Defined.
 
 
 Lemma ExpAgree1
-      (T: Type) (C: CTyp) (n: T) :
+      (T: Type) (C: CTyp T) (n: T) :
   ExpEvalTRN nil FEnvWTNil noDupNil nil (Val (existT ValueI (VT T C)
             (Cst (VT T C) n))) (VT T C) (ExpT11 T C n) = 
   fun w => ExpEvalSOS_TRN nil FEnvWTNil nil (Val (existT ValueI (VT T C)
@@ -223,7 +223,7 @@ Proof.
 Defined.
 
 
-Program Definition ExpT12 (T: Type) (C: CTyp)        
+Program Definition ExpT12 (T: Type) (C: CTyp T)        
            (n: T) (fenv: funEnv) (env: valEnv) :
   ExpTyping (funEnv2funTC fenv) (valEnv2valTC env)
     (Val (existT ValueI (VT T C) (Cst (VT T C) n))) (VT T C) := _.
@@ -238,7 +238,7 @@ Defined.
 Lemma ExpAgree2 (fenv: funEnv)        
            (k1: FEnvWT fenv) (k2: noDup fenv)
            (env: valEnv)
-      (T: Type) (C: CTyp) (n: T) :
+      (T: Type) (C: CTyp T) (n: T) :
   ExpEvalTRN fenv k1 k2 env (Val (existT ValueI (VT T C)
         (Cst (VT T C) n))) (VT T C) (ExpT12 T C n fenv env) = 
   fun w => ExpEvalSOS_TRN fenv k1 env (Val (existT ValueI (VT T C)
@@ -265,7 +265,7 @@ Defined.
 Lemma ExpAgree2n (fenv: funEnv)        
            (k1: FEnvWT fenv) (k2: noDup fenv)
            (env: valEnv)
-      (T: Type) (C: CTyp) (n: T) :
+      (T: Type) (C: CTyp T) (n: T) :
   ExpEvalTRN fenv k1 k2 env (Val (existT ValueI (VT T C)
       (Cst (VT T C) n))) (VT T C) (ExpT12 T C n fenv env) = ret n.
   eapply functional_extensionality_dep.
@@ -285,7 +285,7 @@ Lemma ExpAgree2n (fenv: funEnv)
   auto.
 Defined.
 
-Program Definition ExpT13 (T: Type) (C: CTyp)    
+Program Definition ExpT13 (T: Type) (C: CTyp T)    
         (x: Id) (fenv: funEnv) (env: valEnv) 
         (H: findE (valEnv2valTC env) x = Some (VT T C)) :  
   ExpTyping (funEnv2funTC fenv) (valEnv2valTC env) (Var x)
@@ -298,8 +298,8 @@ Defined.
 
 
 Lemma xxxAA (env: valEnv) (i0: Id) : (if IdT.IdEqDec i0 i0
-       then Some (VT nat (CInt I32 Unsigned))
-       else findE (valEnv2valTC env) i0) = Some (VT nat (CInt I32 Unsigned)).
+       then Some (VT nat (CInt nat eq_refl I32 Unsigned))
+       else findE (valEnv2valTC env) i0) = Some (VT nat (CInt nat eq_refl I32 Unsigned)).
   destruct (IdT.IdEqDec i0 i0).
   reflexivity.
   intuition n.
@@ -833,7 +833,7 @@ Lemma compare_den_var
   rewrite <- eq_rect_eq.
   rewrite <- eq_rect_eq.
   simpl.
-  specialize (IHenv eq_refl i v mA x1).
+  specialize (IHenv eq_refl i v mA eq_refl x1).
   rewrite valenvtrn_eq in IHenv.
   exact IHenv.
 Defined.  

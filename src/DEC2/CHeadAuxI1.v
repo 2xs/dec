@@ -67,11 +67,12 @@ Definition WP := IdT.WP.
 
 (****************************************************************)
 
-(* produces numbered list, pairing list elems with natural numbers plus 2 *)
+(* produces a numbered list, pairing list elems with natural numbers,
+adding 3 to the length of the tail *)
 Fixpoint enumBListX {A: Type} (n: nat) (ls: list A) : list (nat * A) :=
   match ls with
   | nil => nil
-  | x :: xs => ((length xs + n + 2)%nat, x) :: enumBListX n xs
+  | x :: xs => ((length xs + n + 3)%nat, x) :: enumBListX n xs
   end.                            
 
 Definition enumBList {A: Type} (ls: list A) : list (nat * A) :=

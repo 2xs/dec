@@ -50,6 +50,7 @@ Require VectorDef.
 Require Import compcert.common.AST.
 Require Import compcert.cfrontend.Ctypes.
 Require Import compcert.cfrontend.Csyntax.
+Require Import compcert.cfrontend.Cop.
 
 Import ListNotations.
 Import Integers.
@@ -81,20 +82,23 @@ Definition coerce_i (i: TypSpecI1.intsize) : intsize :=
   | TypSpecI1.I8 => I8
   | TypSpecI1.I16 => I16
   | TypSpecI1.I32 => I32
-(*  | TypSpecI1.I64 => I32 *) 
   | TypSpecI1.IBool => IBool                      
   end.                
 
 
 (* types *)
-Fixpoint CTyp2C (t: CTyp) : type :=
+Fixpoint CTyp2C (t0: Type) (t: CTyp t0) : type :=
   match t with
-  | CVoid => Tvoid 
-  | CInt i s => Tint (coerce_i i) (coerce_s s) noattr
-  | CPtr T => Tpointer (CTyp2C T) noattr    
+  | CVoid => Tvoid
+  | CBool _ _ _ => Tint IBool Unsigned noattr               
+  | CInt _ i s => Tint (coerce_i i) (coerce_s s) noattr
+  | CPtr _ T => Tpointer (CTyp2C t0 T) noattr    
   end.
         
-Definition VTyp2C (t: VTyp) : type := CTyp2C (cVTyp t).
+Definition VTyp2C (t: VTyp) : type := match t with
+                 | VT st ct => CTyp2C st ct
+                 end.
+  
 
 Fixpoint typelistConv1 (ls: list type) : typelist :=
   match ls with
@@ -193,6 +197,7 @@ Lemma i32_2int : Make32.int -> int.
   eassumption.
 Defined.  
 
+
 (***************************************************************)
 
 Definition Allowed (t: VTyp) : Type :=
@@ -205,40 +210,41 @@ Definition AllowedF (ft : FTyp) : Type * (list Type) :=
                end
   end.               
 
+(* Axiom allowed_ax : forall (t: VTyp), Allowed t. *)
 
 (*****************************************************************)
 
 (* translate value of permissible type as typed value *)
-Lemma Val2C : forall (t: VTyp), Allowed t -> forall (v: Value),
+Lemma Val2C : forall (t: VTyp), forall (v: Value),
   VTyping v t -> (val * type).
   intros.
   destruct H.
   unfold valueVTyp in *.
   destruct v.
   destruct x as [t ct].
-  simpl in *.
   destruct v.
   simpl in v.
   set (ct1 := ct).
-  set (ct2 := CTyp2C ct1).
-  destruct X.
-  destruct s.
+  set (ct2 := CTyp2C t ct1).
+  destruct ct.
+  exact (Vundef, Tvoid).
   inversion e; subst. 
-  exact (Vint (i32_2int (nat2_i32 v)), ct2).
-  inversion e; subst.
   remember v as v1.
   destruct v.
   exact (Vint (i32_2int (nat2_i32 1)), ct2).
   exact (Vint (i32_2int (nat2_i32 0)), ct2).
-  exact (Vundef, Tvoid).
+  inversion e; subst.
+  exact (Vint (i32_2int (nat2_i32 v)), ct2).
+  inversion e; subst.
+  exact (Vundef, ct2).
 Defined.  
 
 
 (* translate value of permissible type as typed expression *)
-Lemma Val2Cexp : forall (t: VTyp), Allowed t -> forall (v: Value),
+Lemma Val2Cexp : forall (t: VTyp), forall (v: Value),
   VTyping v t -> (expr * type).
   intros.
-  remember (Val2C t X v H) as ww.
+  remember (Val2C t v H) as ww.
   destruct ww as [v0 t0].
   exact (Eval v0 t0, t0).
 Defined.  
@@ -259,7 +265,7 @@ Lemma liftFenvE (n: nat)
   destruct (IdT.IdEqDec x y).
   inversion k; subst.
   simpl.
-  destruct (IdT.IdEqDec y y).  (* i ~= (length (tl tenv)) + 2 + n *) 
+  destruct (IdT.IdEqDec y y).  (* i ~= (length (tl tenv)) + 3 + n *) 
   eauto.
 
   intuition n.
@@ -303,10 +309,9 @@ Lemma liftFenvF (n: nat)
   f_equal.
 Defined.
 
-(* Axiom allowed_ax : forall (t: VTyp), Allowed t. *)
 
 Lemma mkAssignments_aux
-        (allowed_ax : forall (t: VTyp), Allowed t)
+      (*  (allowed_ax : forall (t: VTyp), Allowed t) *)
         (env: valEnv) (tenv: valTC)
         (k: EnvTyping env tenv)
         (ls: list (Id * (ident * type))) :
@@ -323,9 +328,7 @@ Lemma mkAssignments_aux
   destruct p.
   inversion k; subst.
   specialize (IHenv (map (thicken StaticSemL.Id valueVTyp) env) eq_refl ls).
-  assert (Allowed (projT1 v)) as a1.
-  eapply allowed_ax.
-  set (p := (i1, Val2C (projT1 v) a1 v eq_refl)). (* the type is actually
+  set (p := (i1, Val2C (projT1 v) v eq_refl)). (* the type is actually
               obtained from translating v, it is not coming from ls, 
               though the two should agree *)
   exact (p :: IHenv).
@@ -405,35 +408,38 @@ Fixpoint list2exprlist (ls: list expr) : exprlist :=
 
 (****************************************************************)
 
-Definition Exp2C_def := fun (ftenv: funTC) (tenv: valTC) (e: Exp)
+Definition Exp2C_def :=
+  fun (ftenv: funTC) (tenv: valTC) (e: Exp)
                             (t: VTyp)
-                            (k: ExpTyping ftenv tenv e t)  => Allowed t ->
+                            (k: ExpTyping ftenv tenv e t)  =>
    forall (ctenv: list (Id * (ident * type))),
      ExtCAgree tenv ctenv ->
    forall (ctenvL: list (ident * type)),   
   (expr * type) * list (ident * type).
 
-Definition Prms2C_def := fun (ftenv: funTC) (tenv: valTC) 
+Definition Prms2C_def :=
+  fun (ftenv: funTC) (tenv: valTC) 
                             (ps: Prms) (pt: PTyp)
                             (k: PrmsTyping ftenv tenv ps pt) =>
                            match pt with
-                           | PT ts => tlist2type (map Allowed ts) ->
+                           | PT ts => 
   forall (ctenv: list (Id * (ident * type))),
     ExtCAgree tenv ctenv ->
    forall (ctenvL: list (ident * type)),     
   list (expr * type) * list (ident * type) end.
 
-Definition CTrans_ExpTyping_mut := ExpTyping_mut Exp2C_def Prms2C_def.
+Definition CTrans_ExpTyping_mut :=
+  ExpTyping_mut Exp2C_def Prms2C_def.
 
-Definition CTrans_PrmsTyping_mut := PrmsTyping_mut Exp2C_def Prms2C_def.
+Definition CTrans_PrmsTyping_mut :=
+  PrmsTyping_mut Exp2C_def Prms2C_def.
 
-Lemma Exp2CC
-      (allowed_ax : forall (t: VTyp), Allowed t)
+Lemma Exp2CC 
       (xfunenv: list (Id * (ident * type * typelist)))
       (ftenv: funTC) (tenv: valTC) (e: Exp)
                             (t: VTyp)
                             (k: ExpTyping ftenv tenv e t) :
-  forall (m: Allowed t) (ctenv: list (Id * (ident * type))),
+  forall (ctenv: list (Id * (ident * type))),
     ExtCAgree tenv ctenv ->
    forall (ctenvL: list (ident * type)),       
      (expr * type) * list (ident * type).
@@ -452,7 +458,7 @@ Lemma Exp2CC
   inversion v0; subst.
   clear H.
   split.
-  exact (Val2Cexp (projT1 v) X v eq_refl).
+  exact (Val2Cexp (projT1 v) v eq_refl).
   exact ctenvL.  
 
 (* Var *)  
@@ -469,11 +475,9 @@ Lemma Exp2CC
 (* BindN *)
   unfold Exp2C_def.
   intros.
-  assert (Allowed t1) as X3.
-  eapply allowed_ax.
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [w1 ctenvL1].
-  specialize (X0 X1 ctenv X2 ctenvL1).
+  specialize (X0 ctenv X1 ctenvL1).
   destruct X0 as [w2 ctenvL2].
   destruct w1 as [cv1 ct1].
   destruct w2 as [cv2 ct2].
@@ -482,9 +486,7 @@ Lemma Exp2CC
 (* BindS *)  
   unfold Exp2C_def.
   intros.
-  assert (Allowed t1) as X3.
-  eapply allowed_ax.
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [w1 ctenvL1].
   destruct w1 as [cv1 ct1].
   set (xs := (map (fun p => fst (snd p)) ctenv) ++
@@ -500,7 +502,7 @@ Lemma Exp2CC
   econstructor.
   assumption.
   
-  specialize (X0 X1 ctenv' X4 ctenvL1). 
+  specialize (X0 ctenv' X4 ctenvL1). 
   destruct X0 as [w2 ctenvL2].      
   destruct w2 as [cv2 ct2].
   set (ctenvL3 := (ix, ct1') :: ctenvL2).   
@@ -528,11 +530,11 @@ Lemma Exp2CC
   assumption.
   assumption.
   
-  specialize (X X0 ctenv2 X3a ctenvL).
+  specialize (X ctenv2 X3a ctenvL).
   destruct X as [X ctenvL1].
   destruct X as [ce3 ct3].
 
-  set (ls := mkAssignments_aux allowed_ax
+  set (ls := mkAssignments_aux 
                                env0 tenv1 e1 ctenv1). 
   set (ce := mkAssignments ls ce3 ct3').
 
@@ -543,16 +545,11 @@ Lemma Exp2CC
 (* IfThenElse *)  
   unfold Exp2C_def.
   intros.
-  assert (Allowed Bool) as X4.
-  {- unfold Allowed.
-     left.
-     right.
-     reflexivity. }
-  specialize (X X4 ctenv X3 ctenvL).
+  specialize (X ctenv X2 ctenvL).
   destruct X as [w1 ctenvL1].
-  specialize (X0 X2 ctenv X3 ctenvL1).
+  specialize (X0 ctenv X2 ctenvL1).
   destruct X0 as [w2 ctenvL2].
-  specialize (X1 X2 ctenv X3 ctenvL2).
+  specialize (X1 ctenv X2 ctenvL2).
   destruct X1 as [w3 ctenvL3].
   destruct w1 as [cv1 ct1].
   destruct w2 as [cv2 ct2].
@@ -563,9 +560,7 @@ Lemma Exp2CC
   unfold Exp2C_def, Prms2C_def.
   intros.
   destruct pt as [ts].
-  assert (tlist2type (map Allowed ts)) as X3.
-  eapply (allowed_ts allowed_ax).
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [cps ctenvL1].
   eapply (liftFenvF nf) in i.  
   destruct i as [ix k2].
@@ -586,9 +581,7 @@ Lemma Exp2CC
   unfold Exp2C_def, Prms2C_def.
   intros.
   destruct pt as [ts].
-  assert (tlist2type (map Allowed ts)) as X3.
-  eapply (allowed_ts allowed_ax).
-  specialize (X X3 ctenv X1 ctenvL).
+  specialize (X ctenv X0 ctenvL).
   destruct X as [cps ctenvL1].
   eapply (liftFenvF nf) in i.  
   destruct i as [ix k2].
@@ -619,18 +612,10 @@ Lemma Exp2CC
   unfold Exp2C_def, Prms2C_def.
   intros.
   
-  assert (Allowed t0) as X3.
-  apply allowed_ax.
-
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [p1 ctenvL1].
   
-  assert (tlist2type (map Allowed ts)) as X4.
-  {- simpl in X1.
-     destruct X1.
-     assumption. }
-  
-  specialize (X0 X4 ctenv X2 ctenvL1).
+  specialize (X0 ctenv X1 ctenvL1).
   destruct X0 as [ps ctenvL2].
 
   exact (p1::ps, ctenvL2).
@@ -639,10 +624,7 @@ Lemma Exp2CC
   unfold Exp2C_def.
   intros.
 
-  assert (Allowed t1) as X3.
-  apply allowed_ax.
-
-  specialize (X X3 ctenv X1 ctenvL).
+  specialize (X ctenv X0 ctenvL).
   destruct X as [p1 ctenvL1].
   destruct p1 as [cv1 ct1].
   set (cls1 := Econs cv1 Enil).
@@ -668,12 +650,11 @@ Defined.
 
 
 Lemma Prms2CC
-      (allowed_ax : forall (t: VTyp), Allowed t)
       (xfunenv: list (Id * (ident * type * typelist)))
       (ftenv: funTC) (tenv: valTC) (ps: Prms) (pt: PTyp)
                             (k: PrmsTyping ftenv tenv ps pt) : 
                            match pt with
-                           | PT ts => tlist2type (map Allowed ts) ->
+                           | PT ts => 
   forall (ctenv: list (Id * (ident * type))),
     ExtCAgree tenv ctenv ->
    forall (ctenvL: list (ident * type)),     
@@ -693,7 +674,7 @@ Lemma Prms2CC
   inversion v0; subst.
   clear H.
   split.
-  exact (Val2Cexp (projT1 v) X v eq_refl).
+  exact (Val2Cexp (projT1 v) v eq_refl).
   exact ctenvL.  
 
 (* Var *)  
@@ -702,7 +683,7 @@ Lemma Prms2CC
   unfold IdTyping in i.
   unfold EnvrAssign in i.
 
-  eapply (liftFenvE nf) in i.   
+  eapply (liftFenvE nf) in i.  
   destruct i as [i H0].
   set (ct := VTyp2C t).
   exact (Evar i ct, ct, ctenvL).
@@ -710,11 +691,9 @@ Lemma Prms2CC
 (* BindN *)
   unfold Exp2C_def.
   intros.
-  assert (Allowed t1) as X3.
-  eapply allowed_ax.
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [w1 ctenvL1].
-  specialize (X0 X1 ctenv X2 ctenvL1).
+  specialize (X0 ctenv X1 ctenvL1).
   destruct X0 as [w2 ctenvL2].
   destruct w1 as [cv1 ct1].
   destruct w2 as [cv2 ct2].
@@ -723,17 +702,15 @@ Lemma Prms2CC
 (* BindS *)  
   unfold Exp2C_def.
   intros.
-  assert (Allowed t1) as X3.
-  eapply allowed_ax.
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [w1 ctenvL1].
   destruct w1 as [cv1 ct1].
   set (xs := (map (fun p => fst (snd p)) ctenv) ++
              (map fst ctenvL1)). 
-  set (n := Pmaximum (pf::xs)).  
-  set (ix := Psucc n).
+  set (n := Pmaximum (pf::xs)).    
+  set (ix := Psucc n).          
   set (ct1' := VTyp2C t1).
-  set (ctenv' := (x, (ix, ct1')) :: ctenv).
+  set (ctenv' := (x, (ix, ct1')) :: ctenv). 
   assert (ExtCAgree tenv' ctenv') as X4.
   subst tenv'.
   subst ctenv'.
@@ -741,10 +718,10 @@ Lemma Prms2CC
   econstructor.
   assumption.
   
-  specialize (X0 X1 ctenv' X4 ctenvL1).
-  destruct X0 as [w2 ctenvL2].
+  specialize (X0 ctenv' X4 ctenvL1). 
+  destruct X0 as [w2 ctenvL2].      
   destruct w2 as [cv2 ct2].
-  set (ctenvL3 := (ix, ct1') :: ctenvL2).
+  set (ctenvL3 := (ix, ct1') :: ctenvL2).   
   exact (Ecomma (Eassign (Evar ix ct1) cv1 ct1') cv2 ct2, ct2, ctenvL3).
 
 (* BindMS *)
@@ -752,7 +729,7 @@ Lemma Prms2CC
   intros.
   set (xs := (map (fun p => fst (snd p)) ctenv) ++
              (map fst ctenvL)). 
-  set (n := Pmaximum (pf::xs)). 
+  set (n := Pmaximum (pf::xs)).  
 
   set (nn := S (Pos.to_nat n)). 
   set (ctenv1 := ValTC2ExtCX nn tenv1).
@@ -769,11 +746,11 @@ Lemma Prms2CC
   assumption.
   assumption.
   
-  specialize (X X0 ctenv2 X3a ctenvL).
+  specialize (X ctenv2 X3a ctenvL).
   destruct X as [X ctenvL1].
   destruct X as [ce3 ct3].
 
-  set (ls := mkAssignments_aux allowed_ax
+  set (ls := mkAssignments_aux 
                                env0 tenv1 e0 ctenv1). 
   set (ce := mkAssignments ls ce3 ct3').
 
@@ -784,16 +761,11 @@ Lemma Prms2CC
 (* IfThenElse *)  
   unfold Exp2C_def.
   intros.
-  assert (Allowed Bool) as X4.
-  {- unfold Allowed.
-     left.
-     right.
-     reflexivity. }
-  specialize (X X4 ctenv X3 ctenvL).
+  specialize (X ctenv X2 ctenvL).
   destruct X as [w1 ctenvL1].
-  specialize (X0 X2 ctenv X3 ctenvL1).
+  specialize (X0 ctenv X2 ctenvL1).
   destruct X0 as [w2 ctenvL2].
-  specialize (X1 X2 ctenv X3 ctenvL2).
+  specialize (X1 ctenv X2 ctenvL2).
   destruct X1 as [w3 ctenvL3].
   destruct w1 as [cv1 ct1].
   destruct w2 as [cv2 ct2].
@@ -804,9 +776,7 @@ Lemma Prms2CC
   unfold Exp2C_def, Prms2C_def.
   intros.
   destruct pt0 as [ts].
-  assert (tlist2type (map Allowed ts)) as X3.
-  eapply (allowed_ts allowed_ax).
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [cps ctenvL1].
   eapply (liftFenvF nf) in i.  
   destruct i as [ix k2].
@@ -827,11 +797,9 @@ Lemma Prms2CC
   unfold Exp2C_def, Prms2C_def.
   intros.
   destruct pt0 as [ts].
-  assert (tlist2type (map Allowed ts)) as X3.
-  eapply (allowed_ts allowed_ax).
-  specialize (X X3 ctenv X1 ctenvL).
+  specialize (X ctenv X0 ctenvL).
   destruct X as [cps ctenvL1].
-  eapply (liftFenvF nf) in i.     
+  eapply (liftFenvF nf) in i.  
   destruct i as [ix k2].
   simpl in *.
 
@@ -850,10 +818,7 @@ Lemma Prms2CC
   unfold Exp2C_def.
   intros.
 
-  assert (Allowed t1) as X3.
-  apply allowed_ax.
-
-  specialize (X X3 ctenv X1 ctenvL).
+  specialize (X ctenv X0 ctenvL).
   destruct X as [p1 ctenvL1].
   destruct p1 as [cv1 ct1].
   set (cls1 := Econs cv1 Enil).
@@ -885,18 +850,10 @@ Lemma Prms2CC
   unfold Exp2C_def, Prms2C_def.
   intros.
   
-  assert (Allowed t) as X3.
-  apply allowed_ax.
-
-  specialize (X X3 ctenv X2 ctenvL).
+  specialize (X ctenv X1 ctenvL).
   destruct X as [p1 ctenvL1].
   
-  assert (tlist2type (map Allowed ts)) as X4.
-  {- simpl in X1.
-     destruct X1.
-     assumption. }
-  
-  specialize (X0 X4 ctenv X2 ctenvL1).
+  specialize (X0 ctenv X1 ctenvL1).
   destruct X0 as [ps0 ctenvL2].
 
   exact (p1::ps0, ctenvL2).
@@ -907,19 +864,29 @@ Lemma Prms2CC
 Defined.
 
 
+Definition fuel_type : type := (Tint I32 Unsigned noattr).
+Definition tank_type : type := (Tpointer fuel_type noattr).
+
 Lemma Fun2CC
-      (allowed_ax : forall (t: VTyp), Allowed t)
       (xfunenv: list (Id * (ident * type * typelist)))
       (ftenv: funTC) (f: Fun) (k1: FunWT ftenv f) : function.
 
   set (hhs := (map (fun p => fst (fst (snd p))) xfunenv)).
   set (pf := Pmaximum hhs).
-  set (nf := S (Pos.to_nat pf)). 
+  set (nf := S (Pos.to_nat pf)).
 
+  set (ctank := Evar 1 tank_type).
+
+  set (fuel := Ederef ctank fuel_type).
+
+  set (fuel_decr := Epostincr Decr fuel fuel_type).
+  
   remember (FunTC2ExtCX nf ftenv) as cftenv.  
   remember (FunTC2ExtC1X nf ftenv) as cftenv1.
   destruct f as [tenv v e].
-  destruct v as [t v].
+  remember v as v2.
+  rename v into v1.
+  destruct v2 as [t v].
   unfold FunWT in k1.
   simpl in k1.
   
@@ -930,12 +897,13 @@ Lemma Fun2CC
 
   set (ags := liftFenvE1 n tenv). 
 
-  assert (Allowed t) as tt.
-  eapply allowed_ax.
-
-  set (st := Exp2CC allowed_ax xfunenv ftenv tenv e t k1 tt ctenv ags nil).
+  set (st := Exp2CC xfunenv ftenv tenv e t k1 ctenv ags nil).
   
   destruct st as [fs ctenvL].
+
+  set (dflt := Val2C t (existT ValueI t v) eq_refl).
+  destruct dflt as [dflt ct2].
+  set (dfltE := Eval dflt ct).
   
   econstructor.
   exact ct.
@@ -946,12 +914,81 @@ Lemma Fun2CC
   exact (map snd cftenv1).
 
   destruct fs as [fs t0].
-  exact (Sreturn (Some fs)).
+
+  exact (Ssequence (Sdo fuel_decr)
+                   (Sifthenelse (Ebinop Oeq fuel 
+                                        (Eval (Vint (i32_2int (nat2_i32 0)))
+                                              fuel_type)
+                                        fuel_type)
+                                (Sreturn (Some dfltE))
+                                (Sreturn (Some fs)))).
 Defined.
 
 
+Lemma Fun2CC_main (nn: nat)
+      (xfunenv: list (Id * (ident * type * typelist)))
+      (ftenv: funTC) (f: Fun) (k1: FunWT ftenv f) : function.
+
+  set (hhs := (map (fun p => fst (fst (snd p))) xfunenv)).
+  set (pf := Pmaximum hhs).
+  set (nf := S (Pos.to_nat pf)).
+
+  set (ctank := Evar 1 tank_type).
+
+  set (fuel := Ederef ctank fuel_type).
+
+  set (fuel_decr := Epostincr Decr fuel fuel_type).
+
+  set (init_val := Eval (Vint (i32_2int (nat2_i32 nn))) fuel_type).
+  set (init := Sdo (Eassign fuel init_val fuel_type)).
+
+  remember (FunTC2ExtCX nf ftenv) as cftenv.  
+  remember (FunTC2ExtC1X nf ftenv) as cftenv1.
+  destruct f as [tenv v e].
+  remember v as v2.
+  rename v into v1.
+  destruct v2 as [t v].
+  unfold FunWT in k1.
+  simpl in k1.
+  
+  remember (VTyp2C t) as ct.
+
+  set (n := (nf + length ftenv)%nat).   
+  set (ctenv := ValTC2ExtCX n tenv).
+
+  set (ags := liftFenvE1 n tenv). 
+
+  set (st := Exp2CC xfunenv ftenv tenv e t k1 ctenv ags nil).
+  
+  destruct st as [fs ctenvL].
+
+  set (dflt := Val2C t (existT ValueI t v) eq_refl).
+  destruct dflt as [dflt ct2].
+  set (dfltE := Eval dflt ct).
+  
+  econstructor.
+  exact ct.
+  exact cc_default.
+
+  set (ps := map snd ctenv).
+  exact (ps ++ ctenvL).
+  exact (map snd cftenv1).
+
+  destruct fs as [fs t0].
+
+  exact (Ssequence init 
+         (Ssequence (Sdo fuel_decr)
+                   (Sifthenelse (Ebinop Oeq fuel 
+                                        (Eval (Vint (i32_2int (nat2_i32 0)))
+                                              fuel_type)
+                                        fuel_type)
+                                (Sreturn (Some dfltE))
+                                (Sreturn (Some fs))))).
+Defined.
+
+
+
 Lemma Fun2CC_1
-      (allowed_ax : forall (t: VTyp), Allowed t)
       (xfunenv: list (Id * (ident * type * typelist)))
       (fenv: funEnv) (x: Id) (f: Fun) 
       (k1: FunWT (funEnv2funTC fenv) f) (m: findE fenv x = Some f) :
@@ -978,13 +1015,12 @@ Lemma Fun2CC_1
   exact x.
   split.
   exact i. 
-  set (ee := Fun2CC allowed_ax xfunenv ftenv f k1).
+  set (ee := Fun2CC xfunenv ftenv f k1).
   exact ee.
 Defined.  
 
 
 Lemma Fun2CC_all_aux
-      (allowed_ax : forall (t: VTyp), Allowed t)
       (xfunenv: list (Id * (ident * type * typelist)))
       (fenv: funEnv)  
       (k1: FEnvWT fenv) (k2: noDup fenv) :
@@ -1019,13 +1055,12 @@ Lemma Fun2CC_all_aux
   specialize (k1 ftenv eq_refl).
   specialize (k1 x f H).
   
-  set (ee := Fun2CC_1 allowed_ax xfunenv fenv x f k1 H).
+  set (ee := Fun2CC_1 xfunenv fenv x f k1 H).
   exact (ee :: IHfenv1).
 Defined.
 
 
 Lemma Fun2CC_all
-      (allowed_ax : forall (t: VTyp), Allowed t)
       (xfunenv: list (Id * (ident * type * typelist)))
       (fenv: funEnv)  
       (k1: FEnvWT fenv) (k2: noDup fenv) :
@@ -1033,7 +1068,7 @@ Lemma Fun2CC_all
   assert (forall a, List.In a fenv -> List.In a fenv) as H.
   intros.
   auto.
-  eapply (Fun2CC_all_aux allowed_ax xfunenv fenv k1 k2 fenv H).
+  eapply (Fun2CC_all_aux xfunenv fenv k1 k2 fenv H).
 Defined.
 
 Lemma function2globdef (p: ident * function) : 
@@ -1047,19 +1082,18 @@ Lemma function2globdef (p: ident * function) :
 Defined.  
 
 Lemma Fun2CC_all2
-      (allowed_ax : forall (t: VTyp), Allowed t)
       (xfunenv: list (Id * (ident * type * typelist)))
       (fenv: funEnv)  
       (k1: FEnvWT fenv) (k2: noDup fenv) :
   list (ident * globdef (Ctypes.fundef function) type).
-  set (ls := Fun2CC_all allowed_ax xfunenv fenv k1 k2).
+  set (ls := Fun2CC_all xfunenv fenv k1 k2).
   set (ls1 := map snd ls).
   exact (map function2globdef ls1).
 Defined.  
   
 
 (* the names (ident) of the actions are those chosen by the programmer *)
-(* 1 should be used for the main *)
+(* 1 should be used for the fuel, 2 for the main *)
 Lemma extND_type (p: Id * NamedDef) : (Id * (ident * type * typelist)).
   destruct p.
   destruct n.
@@ -1074,19 +1108,18 @@ Lemma extND_globdef (p: NamedDef) :
 Defined.  
 
 Lemma TopLevel0 
-      (allowed_ax : forall (t: VTyp), Allowed t)
       (xenv: list (Id * NamedDef))
       (fenv: funEnv)  
       (k1: FEnvWT fenv) (k2: noDup fenv) :
   program.
 set (xfunenv := map extND_type xenv).            
 set (xdefs := map extND_globdef (map snd xenv)).            
-set (xdefs2 := Fun2CC_all2 allowed_ax xfunenv fenv k1 k2).
+set (xdefs2 := Fun2CC_all2 xfunenv fenv k1 k2).
 
 econstructor.
 exact (xdefs ++ xdefs2).
 exact (map fst xdefs ++ map fst xdefs2).
-exact (1%positive).
+exact (2%positive).
 Unshelve.
 Focus 2.
 exact nil.
@@ -1096,19 +1129,18 @@ auto.
 Defined.
 
 
-Lemma MkMain_aux
-      (allowed_ax : forall (t: VTyp), Allowed t)
+Lemma MkMain_aux (n: nat)
       (xfunenv: list (Id * (ident * type * typelist)))
       (ftenv: funTC)
       (tenv: valTC)
       (v: Value)
       (e: Exp)
       (k3: FunWT ftenv (FC tenv v e)) : function.
-  eapply (Fun2CC allowed_ax xfunenv ftenv (FC tenv v e) k3).
+  eapply (Fun2CC_main n xfunenv ftenv (FC tenv v e) k3).
 Defined.  
 
-Lemma MkMain1
-      (allowed_ax : forall (t: VTyp), Allowed t)
+
+Lemma MkMain1 (n: nat)
       (xfunenv: list (Id * (ident * type * typelist)))
       (ftenv: funTC)
       (tenv: valTC)
@@ -1116,17 +1148,16 @@ Lemma MkMain1
       (e: Exp)
       (k3: FunWT ftenv (FC tenv v e)) : NamedDef.
   econstructor.
-  exact (1%positive).
+  exact (2%positive).
   econstructor.
   econstructor.
-  eapply (MkMain_aux allowed_ax xfunenv ftenv tenv v e k3).
+  eapply (MkMain_aux n xfunenv ftenv tenv v e k3).
   exact (VTyp2C (projT1 v)).
   exact (typelistConv1 (map (fun x => VTyp2C (snd x)) tenv)).
 Defined.
 
 
-Lemma MkMain
-      (allowed_ax : forall (t: VTyp), Allowed t)
+Lemma MkMain (n: nat)
       (xfunenv: list (Id * (ident * type * typelist)))
       (ftenv: funTC)
       (tenv: valTC)
@@ -1135,28 +1166,29 @@ Lemma MkMain
       (k3: FunWT ftenv (FC tenv v e)) :
   (ident * globdef (Ctypes.fundef function) type).
   econstructor.
-  exact (1%positive).
+  exact (2%positive).
   econstructor.
   econstructor.
-  eapply (MkMain_aux allowed_ax xfunenv ftenv tenv v e k3).
+  eapply (MkMain_aux n xfunenv ftenv tenv v e k3).
 Defined.
 
 
-Lemma TopLevel 
-      (allowed_ax : forall (t: VTyp), Allowed t)
+(* top level translation function *)
+Lemma TopLevel (n: nat) 
       (xenv: list (Id * NamedDef))
       (fenv: funEnv)
       (k1: FEnvWT fenv) (k2: noDup fenv)
-      (tenv: valTC)
       (v: Value)
       (e: Exp)
-      (k3: FunWT (funEnv2funTC fenv) (FC tenv v e)) :
+      (k3: FunWT (funEnv2funTC fenv) (FC nil v e)) :
   program.
 set (xfunenv := map extND_type xenv).            
-set (mdef := MkMain allowed_ax xfunenv (funEnv2funTC fenv) tenv v e k3).
-set (xdefs := mdef :: (map extND_globdef (map snd xenv))).            
-set (xdefs2 := Fun2CC_all2 allowed_ax xfunenv fenv k1 k2).
-    
+set (fdef := (1%positive, @Gvar fundef type
+                               (mkglobvar tank_type nil false false))).
+set (mdef := MkMain n xfunenv (funEnv2funTC fenv) nil v e k3).
+set (xdefs := fdef :: (mdef :: (map extND_globdef (map snd xenv)))).            
+set (xdefs2 := Fun2CC_all2 xfunenv fenv k1 k2).
+
 econstructor.
 exact (xdefs ++ xdefs2).
 exact (map fst xdefs ++ map fst xdefs2).

@@ -2203,8 +2203,8 @@ Lemma ExpInterp_ApplyS (fenv : funEnv) (D:  FEnvWT fenv) (n : nat)
      unfold ExpSoundness_ApplyX_aux0.
      generalize (Pure_sideffect fenv env s0 s9a n0 n9a e9
         (Val
-           (existT ValueI (VT nat (CInt I32 Unsigned))
-                   (Cst (VT nat (CInt I32 Unsigned)) sv9a))) p9 uu9).
+           (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+               (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) sv9a))) p9 uu9).
      intro bb.
      destruct bb as [bb1 bb2]. 
      inversion bb1; subst.
@@ -2223,14 +2223,16 @@ Lemma ExpInterp_ApplyS (fenv : funEnv) (D:  FEnvWT fenv) (n : nat)
      set (LL1 := SOS_Exp1 fenv env (Apply x (PS ls) e9) t s9a n9a
     (ExpSoundness_ApplyX_aux1 fenv n ftenv tenv tenv0 x v0 e t eq_refl k1 IH1
        e9 ls pt p9 i1 p env s9a n9a (k4 eq_refl env m2 n9a q s9a) m9
-       (existT ValueI (VT nat (CInt I32 Unsigned))
-        (Cst (VT nat (CInt I32 Unsigned)) sv9a)) eq_refl eq_refl m2 q uu9)).
+       (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+               (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) sv9a))
+       eq_refl eq_refl m2 q uu9)).
 
      set (LL2 := SOS_Exp1 fenv env (Apply x (PS ls) e9) t s9a n9a
     (ExpSoundness_ApplyX_aux1 fenv n ftenv tenv tenv0 x v0 e t eq_refl k1 IH1
        e9 ls pt p9 i1 p env s9a n9a JJ1 m9
-       (existT ValueI (VT nat (CInt I32 Unsigned))
-        (Cst (VT nat (CInt I32 Unsigned)) sv9a)) eq_refl eq_refl m2 q uu9)).
+       (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+               (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) sv9a))
+       eq_refl eq_refl m2 q uu9)).
 
     assert (LL1 = LL2) as E1.
     subst LL2.
@@ -2360,8 +2362,9 @@ Lemma ExpInterp_ApplyS (fenv : funEnv) (D:  FEnvWT fenv) (n : nat)
     assert (forall RBE, SOS_Exp1 fenv env (Apply x (PS ls) e9) t s9a n9a
     (ExpSoundness_ApplyX_aux3 fenv n ftenv tenv tenv0 x v0 e t eq_refl k1 IH1
        e9 ls pt p env s9a n9a vvs2 uuB1 eq_refl w2d n2d uuC1 m9
-       (existT ValueI (VT nat (CInt I32 Unsigned))
-          (Cst (VT nat (CInt I32 Unsigned)) sv9a)) eq_refl eq_refl m2 q uu9
+       (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+               (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) sv9a))
+       eq_refl eq_refl m2 q uu9
        RBE) =
   DenExp_ext t n9a
     (ExpTrans_ApplyX_aux3 fenv D1 n ftenv tenv tenv0 x v0 e t eq_refl k1 IH2
@@ -2786,8 +2789,8 @@ Lemma ExpSoundness_ApplyX0_aux3
   (H0 : EnvTyping env tenv)
   (X3 : EClosure fenv env (Conf Exp s9 0 e9) (Conf Exp s9 0
              (Val
-               (existT ValueI (VT nat (CInt I32 Unsigned))
-                  (Cst (VT nat (CInt I32 Unsigned)) n10)))))
+               (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                  (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10)))))
                                                  (*  (Val v9))) *)
   (i3 : funFTyp (FC tenv0 v e) = FT pt t)
   (n : nat)
@@ -2799,8 +2802,8 @@ Lemma ExpSoundness_ApplyX0_aux3
     (Conf Exp (fst x0) (snd x0) (Val v0))}}.
 
     set (v9 := Val
-               (existT ValueI (VT nat (CInt I32 Unsigned))
-                  (Cst (VT nat (CInt I32 Unsigned)) n10))).
+               (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                  (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10))).
     set (f:=FC tenv0 v e). 
     set (ft:=FT pt t). 
   
@@ -3316,8 +3319,9 @@ Lemma ExpInterp_Apply0 (fenv : funEnv) (D:  FEnvWT fenv) :
     
     destruct (Pure_sideffect fenv env s0 s9a 0 n9a e9
         (Val
-           (existT ValueI (VT nat (CInt I32 Unsigned))
-                   (Cst (VT nat (CInt I32 Unsigned)) sv9a))) p9 uu9).
+           (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                   (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) sv9a)))
+        p9 uu9).
 
     inversion e1; subst.
     unfold eq_rect_r.
@@ -3330,15 +3334,17 @@ Lemma ExpInterp_Apply0 (fenv : funEnv) (D:  FEnvWT fenv) :
     set (LL1 := SOS_Exp1 fenv env (Apply x (PS ls) e9) t s9a 0
     (ExpSoundness_ApplyX0_aux1 fenv ftenv tenv tenv0 x v0 e t eq_refl k1 e9 ls
        pt p9 i1 p0 e0 env s9a (k4 eq_refl env m2 0 (le_n 0) s9a)
-       (existT ValueI (VT nat (CInt I32 Unsigned))
-          (Cst (VT nat (CInt I32 Unsigned)) sv9a)) eq_refl eq_refl m2 uu9 0
+       (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+               (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) sv9a))
+       eq_refl eq_refl m2 uu9 0
        (le_n 0))).
 
     set (LL2 := SOS_Exp1 fenv env (Apply x (PS ls) e9) t s9a 0
     (ExpSoundness_ApplyX0_aux1 fenv ftenv tenv tenv0 x v0 e t eq_refl k1 e9 ls
        pt p9 i1 p0 e0 env s9a JJ1
-       (existT ValueI (VT nat (CInt I32 Unsigned))
-          (Cst (VT nat (CInt I32 Unsigned)) sv9a)) eq_refl eq_refl m2 uu9 0
+       (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+               (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) sv9a))
+       eq_refl eq_refl m2 uu9 0
        (le_n 0))).
 
     set (RR := DenExp_ext t 0
@@ -3823,6 +3829,7 @@ Lemma PInterpPrms_IH_lemma (fenv : funEnv)
   reflexivity.
 Defined.  
 
+
 (** MAIN *)
 Lemma PrmsInterpA (fenv: funEnv) (D: FEnvWT fenv) :
    forall (n: nat) (ftenv: funTC) (tenv: valTC)
@@ -3862,183 +3869,123 @@ Proof.
     + eapply (ExpInterp_Prms fenv D (S n)).
 Defined.  
 
+(* SOS interpreter for Exp *)
+Lemma SOS_ExpInterpA (fenv: funEnv) (D: FEnvWT fenv) :
+   forall (n: nat) (ftenv: funTC) (tenv: valTC)
+          (e: Exp) (t: VTyp) 
+          (k: ExpTyping ftenv tenv e t),
+   forall (m1: FEnvTyping fenv ftenv)
+            (env: valEnv) (m2: EnvTyping env tenv)
+                       (n': nat) (q1: n' <= n) (s: W),
+                SoundExp fenv env e t s n'.
+Proof.
+ intros. 
+ eapply (projT1 (ExpInterpA fenv D n ftenv tenv e t k m1)).
+ assumption.
+ assumption.
+ assumption.
+Defined. 
+
+(* SOS interpreter for Prms *)
+Lemma SOS_PrmsInterpA (fenv: funEnv) (D: FEnvWT fenv) :
+   forall (n: nat) (ftenv: funTC) (tenv: valTC)
+          (ps: Prms) (pt: PTyp) 
+          (k: PrmsTyping ftenv tenv ps pt),
+   forall (m1: FEnvTyping fenv ftenv)
+                       (env: valEnv) (m2: EnvTyping env tenv)
+                       (n': nat) (q1: n' <= n) (s: W),
+                SoundPrms fenv env ps pt s n'.
+Proof.
+ intros. 
+ eapply (projT1 (PrmsInterpA fenv D n ftenv tenv ps pt k m1)).
+ assumption.
+ assumption.
+ assumption.
+Defined. 
+
+
+(* Reflective interpreter for Exp *)
+Lemma Refl_ExpInterpA (fenv: funEnv) (D: FEnvWT fenv) :
+   forall (n: nat) (ftenv: funTC) (tenv: valTC)
+          (e: Exp) (t: VTyp) 
+          (k: ExpTyping ftenv tenv e t),
+    forall (m1: FEnvTyping fenv ftenv)
+                    (senv: valTC_Trans tenv)
+                       (n': nat) (q2: n' <= n), W -> 
+                        (sVTyp t * W) * sigT (fun n1 => n1 <= n').
+Proof.
+  intros.
+  eapply (projT1 (projT2 (ExpInterpA fenv D n ftenv tenv e t k m1))).
+  assumption.
+  assumption.
+  assumption.
+  assumption.
+Defined. 
+
+(* Reflective interpreter for Prms *)
+Lemma Refl_PrmsInterpA (fenv: funEnv) (D: FEnvWT fenv) :
+   forall (n: nat) (ftenv: funTC) (tenv: valTC)
+          (ps: Prms) (pt: PTyp) 
+          (k: PrmsTyping ftenv tenv ps pt),
+   forall (m1: FEnvTyping fenv ftenv)
+          (senv: valTC_Trans tenv) 
+          (n': nat) (q2: n' <= n), W -> 
+                (PTyp_TRN pt * W) * sigT (fun n1 => n1 <= n').
+Proof.
+ intros. 
+ eapply (projT1 (projT2 (PrmsInterpA fenv D n ftenv tenv ps pt k m1))).
+ assumption.
+ assumption.
+ assumption.
+ assumption.
+Defined. 
+
+
+(* Interpreter equality for Exp *)
+Lemma ExpSOSRefl_Eq (fenv: funEnv) (D: FEnvWT fenv) :
+   forall (n: nat) (ftenv: funTC) (tenv: valTC)
+          (e: Exp) (t: VTyp) 
+          (k: ExpTyping ftenv tenv e t),
+   forall  (m1: FEnvTyping fenv ftenv),  
+   forall (s0: W) (n0: nat) (q: n0 <= n)               
+         (env: valEnv) (m2: EnvTyping env tenv)
+         (senv: valTC_Trans tenv)                  
+         (kk: ValEnv_agree tenv env m2 senv),
+     
+     SOS_Exp1 fenv env e t s0 n0 (SOS_ExpInterpA fenv D n ftenv tenv e t k
+                                 m1 env m2 n0 q s0) =
+     DenExp_ext t n0 (Refl_ExpInterpA fenv D n ftenv tenv e t k
+                                      m1 senv n0 q s0).
+Proof.
+  intros.
+  eapply (projT2 (projT2 (ExpInterpA fenv D n ftenv tenv e t k m1))).
+  assumption.
+Defined.
+
+(* Interpreter equality for Prms *)
+Lemma PrmsSOSRefl_Eq (fenv: funEnv) (D: FEnvWT fenv) :
+   forall (n: nat) (ftenv: funTC) (tenv: valTC)
+          (ps: Prms) (pt: PTyp) 
+          (k: PrmsTyping ftenv tenv ps pt),
+   forall  (m1: FEnvTyping fenv ftenv),  
+   forall (s0: W) (n0: nat) (q: n0 <= n)               
+         (env: valEnv) (m2: EnvTyping env tenv)
+         (senv: valTC_Trans tenv)                  
+         (kk: ValEnv_agree tenv env m2 senv),
+     
+     SOS_Prms fenv env ps pt s0 n0
+              (SOS_PrmsInterpA fenv D n ftenv tenv ps pt k
+                                 m1 env m2 n0 q s0) =
+     DenPrms_ext pt n0
+              (Refl_PrmsInterpA fenv D n ftenv tenv ps pt k
+                                      m1 senv n0 q s0).
+Proof.
+  intros.
+  eapply (projT2 (projT2 (PrmsInterpA fenv D n ftenv tenv ps pt k m1))).
+  assumption.
+Defined.
+
 
 End Interpret.
 
   
-
-(* Strange behaviour - to report *)
-(*
-Lemma eval_vls_aux3             
-      (v: Value) 
-  (*kp1: PrmsTyping (funEnv2funTC fenv) (valEnv2valTC env)
-                   (PS [Val v]) (PT [valueVTyp v])*)
-  (*et2: 
-     valueSTyp v * unit =
-     tlist2type (map (fun t : VTyp => sVTyp t) [valueVTyp v])*) :
-  sigT (fun kp2: vlsTyping [v] [valueVTyp v] =>   
-     Eval_vls [valueVTyp v] [v] kp2 (*Forall2_consT VTyping v t nil nil H2
-                                  (Forall2_nilT VTyping)*)
-     = (Value_Trans v, tt)).
-(*
-     match et2 with  
-         | eq_refl => (Value_Trans v,tt) end).   
-*)
-  simpl in *.
-
-  unfold valueVTyp in *.
-  
-  econstructor 1 with (x:= Forall2_consT VTyping v (projT1 v) nil nil eq_refl
-                                  (Forall2_nilT VTyping)).
-    
-  simpl in *.
-  
-  destruct v.
-  destruct v.
-
-  simpl in *.
-  unfold Value_Trans.
-  unfold sValue.
-  unfold sValueI.
-  simpl.
-  reflexivity.
-Qed.  
-
-  
-  dependent destruction et2.
-  reflexivity.
-Qed.  
-  
-  unfold Eval_vls.
-  simpl.
-  clear X0.
-  clear kp1.
-  clear X.
-  clear env.
-  clear fenv.
-  destruct x.
-  simpl in *.
-  assert (et2 = eq_refl).
-  dependent destruction et2.
-  reflexivity.
-  rewrite H.
-  reflexivity.
-Qed.  
-
-
-
-Lemma eval_vls_aux3 (fenv: funEnv) (env: valEnv) 
-      (t: VTyp)              
-      (v: Value) 
-  (kp1: PrmsTyping (funEnv2funTC fenv) (valEnv2valTC env)
-                   (PS [Val v]) (PT [t]))
-  (et2: 
-     valueSTyp v * unit =
-     tlist2type (map (fun t : VTyp => sVTyp t) [t])) :
-  sigT (fun kp2: vlsTyping [v] [t] =>   
-     Eval_vls [t] [v] kp2 (*Forall2_consT VTyping v t nil nil H2
-                                  (Forall2_nilT VTyping)*)
-    = match et2 with  
-         | eq_refl => (Value_Trans v,tt) end).   
-  simpl in *.
-  inversion kp1; subst.
-  inversion X; subst.
-  
-  econstructor 1 with (x:= Forall2_consT VTyping v t nil nil H2
-                                  (Forall2_nilT VTyping)).
-    
-  unfold VTyping in H2.
-  unfold valueSTyp in et2.
-  unfold valueVTyp in H2.
-  inversion H2; subst.
-  clear H.
-  simpl in et2.
-(*  dependent destruction et2. *)
-
-  destruct v.
-  destruct v.
-
-  simpl in *.
-  unfold Value_Trans.
-  unfold sValue.
-  unfold sValueI.
-  simpl.
-  unfold Eval_vls.
-  simpl.
-  clear X0.
-  clear kp1.
-  clear X.
-  clear env.
-  clear fenv.
-  destruct x.
-  simpl in *.
-  assert (et2 = eq_refl).
-  dependent destruction et2.
-  reflexivity.
-  rewrite H.
-  reflexivity.
-Qed.  
-  
-  clear ct.
-  dependent destruction et2.
-  reflexivity.
-Qed.
-
-
-Lemma eval_vls_aux3a (fenv: funEnv) (env: valEnv) 
-      (t: VTyp)              
-      (v: Value) 
-  (kp1: PrmsTyping (funEnv2funTC fenv) (valEnv2valTC env)
-                   (PS [Val v]) (PT [t]))
-  (et2: 
-     valueSTyp v * unit =
-     tlist2type (map (fun t : VTyp => sVTyp t) [t])) :
-  forall (kp2: vlsTyping [v] [t]),  
-     Eval_vls [t] [v] kp2 (*Forall2_consT VTyping v t nil nil H2
-                                  (Forall2_nilT VTyping)*)
-    = match et2 with  
-         | eq_refl => (Value_Trans v,tt) end.   
-  simpl in *.
-  intros.
-  unfold vlsTyping in kp2.
-  inversion kp1; subst.
-  inversion X; subst.
-  
-  replace kp2 with (Forall2_consT VTyping v t nil nil H2
-                                  (Forall2_nilT VTyping)).
-  
-  unfold VTyping in H2.
-  unfold valueSTyp in et2.
-  unfold valueVTyp in H2.
-  inversion H2; subst.
-  clear H.
-  clear kp2.
-  simpl in et2.
-  dependent destruction et2.
-
-  destruct v.
-  destruct v.
-
-  Show Proof.
-  simpl in *.
-  unfold Value_Trans.
-  unfold sValue.
-  unfold sValueI.
-  simpl.
-  unfold Eval_vls.
-  simpl.
-  reflexivity.
-  eapply Forall2T_PI.
-  intros.
-  eapply proof_irrelevance.
-  Show Proof.
-Defined.  
-  
-
-  assert (v0 = H2).
-  eapply proof_irrelevance.
-  inversion H; subst.
-  reflexivity.
-Defined.  
-
-*)

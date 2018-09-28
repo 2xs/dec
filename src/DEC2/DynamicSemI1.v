@@ -164,7 +164,6 @@ Inductive EStep : (** - Expressions *)
      n = min n0 n1 -> 
      EStep fenv env (Conf Exp s n0 (Apply x (PS es) (Val v)))
                     (Conf Exp s n (Call x (PS es)))
-(*                    (Conf Exp s n (BindMS env' (Call x (PS es)))) *)
 (* function call *)
 | Call_Cg_EStep : forall (fenv: funEnv) (env: valEnv)
                          (s s': W) (n n': nat) (x: Id) (ps ps': Prms),

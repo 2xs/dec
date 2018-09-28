@@ -1,6 +1,6 @@
 (*  DEC 2.0 language specification.
    Paolo Torrini 
-   Universite' Lille-1 - CRIStAL-CNRS
+   Universite' de Lille - CRIStAL-CNRS
 *)
 
 Require Import List.
@@ -68,8 +68,6 @@ Definition valueVTyp (v: Value) : VTyp := projT1 v.
 
 Definition valueSTyp (v: Value) : Type :=  sVTyp (projT1 v).
 
-Definition valueCTyp (v: Value) : CTyp :=  cVTyp (projT1 v).
-
 
 (***********************************************************************)
 
@@ -111,10 +109,6 @@ Definition tfcEnv : Type := list (Id * FCall).
 (** - Bounded call environment *)
 
 Definition fcEnv : Type := list (Id * (Id * nat)).
-
-
-(** Quasi-values *)
-(* Inductive QValue : Type := Var (x: Id) | QV (v: Value). *)
   
 
 (*************************************************************************)
@@ -122,7 +116,7 @@ Definition fcEnv : Type := list (Id * (Id * nat)).
 (** Program terms *)
 
 (** Syntactic categories defined by mutual induction: 
-    functions, quasi-functions, expressions, parameters *)
+    expressions and parameters *)
 
 Inductive Exp : (** - Expressions *)
        Type :=
@@ -224,9 +218,6 @@ Definition NoRet (e: Exp) : Exp := BindN e Skip.
 
 
 
-Definition PStateV := VT (PState W) (CPtr (CInt I8 Unsigned)).
-
-
 Definition xf_read {t: VTyp} (f: W -> sVTyp t) (x: Id) : XFun Unit t := {|
    x_mod := fun _ x => (f x, x); x_name := x     
 |}.                                                     
@@ -235,18 +226,11 @@ Definition xf_write {t: VTyp} (f: sVTyp t -> W) (x: Id) : XFun t Unit := {|
    x_mod := fun x _ => (sValue (cst Unit tt), f x); x_name := x     
 |}.                                                     
 
-Definition xf_reset (x: Id) : XFun PStateV Unit := {|
-   x_mod := fun _ x => (sValue (cst Unit tt), b_init); x_name := x     
-|}.                                                     
-
 Definition Read (t: VTyp) (f: W -> sVTyp t) (x: Id) : Exp :=
   Modify Unit t (xf_read f x) (Val (cst Unit tt)).
 
 Definition Write (t: VTyp) (f: sVTyp t -> W) (e: Exp) (x: Id) : Exp :=
   Modify t Unit (xf_write f x) e.
-
-Definition Reset (x: Id) : Exp :=
-  Modify PStateV Unit (xf_reset x) (Val (cst PStateV WP)).
 
 
 End LangSpec.

@@ -1720,8 +1720,8 @@ Lemma ExpSoundness_ApplyX_aux4_0
   (X3 : EClosure fenv env (Conf Exp s9 n9 e9)
          (Conf Exp s9 n9
             (Val
-               (existT ValueI (VT nat (CInt I32 Unsigned))
-                  (Cst (VT nat (CInt I32 Unsigned)) n10)))))
+               (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                  (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10)))))
   (H50 : funArity (FC tenv0 v e) = length vs)
   (Heqn11 : 0 = Init.Nat.min n2 n10)
   :
@@ -1785,16 +1785,16 @@ Lemma ExpSoundness_ApplyX_aux4_1
   (m9 : ExpTyping ftenv tenv e9 Nat)
   (n10 : nat)
   (k9 : VTyping
-         (existT ValueI (VT nat (CInt I32 Unsigned))
-            (Cst (VT nat (CInt I32 Unsigned)) n10)) Nat)
+         (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+            (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10)) Nat)
   (H : FEnvTyping fenv ftenv)
   (H0 : EnvTyping env tenv)
   (H1 : n9 <= S n)
   (X3 : EClosure fenv env (Conf Exp s9 n9 e9)
          (Conf Exp s9 n9
             (Val
-               (existT ValueI (VT nat (CInt I32 Unsigned))
-                  (Cst (VT nat (CInt I32 Unsigned)) n10)))))
+               (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                  (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10)))))
   (H50 : funArity (FC tenv0 v e) = length vs)
   (Heqn11 : S n11 = Init.Nat.min n2 n10)
   (H6 : EnvTyping (mkVEnv (funValTC (FC tenv0 v e)) vs) tenv0)
@@ -1882,16 +1882,16 @@ Lemma ExpSoundness_ApplyX_aux4
   (m9 : ExpTyping ftenv tenv e9 Nat)
   (n10 : nat)
   (k9 : VTyping
-         (existT ValueI (VT nat (CInt I32 Unsigned))
-            (Cst (VT nat (CInt I32 Unsigned)) n10)) Nat)
+         (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+            (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10)) Nat)
   (H : FEnvTyping fenv ftenv)
   (H0 : EnvTyping env tenv)
   (H1 : n9 <= S n)
   (X3 : EClosure fenv env (Conf Exp s9 n9 e9)
          (Conf Exp s9 n9
             (Val
-               (existT ValueI (VT nat (CInt I32 Unsigned))
-                  (Cst (VT nat (CInt I32 Unsigned)) n10)))))
+               (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                  (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10)))))
   (H50 : funArity (FC tenv0 v e) = length vs)
   (n11 : nat)
   (Heqn11 : S n11 = Init.Nat.min n2 n10)
@@ -2299,8 +2299,8 @@ Lemma ExpSoundness_ApplyX0_aux3
   (H0 : EnvTyping env tenv)
   (X3 : EClosure fenv env (Conf Exp s9 0 e9) (Conf Exp s9 0
              (Val
-               (existT ValueI (VT nat (CInt I32 Unsigned))
-                  (Cst (VT nat (CInt I32 Unsigned)) n10)))))
+               (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                  (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10)))))
   (i3 : funFTyp (FC tenv0 v e) = FT pt t)
   (n : nat)
   (H1 : n <= 0)
@@ -2311,8 +2311,8 @@ Lemma ExpSoundness_ApplyX0_aux3
     (Conf Exp (fst x0) (snd x0) (Val v0))}}.
 
     set (v9 := Val
-               (existT ValueI (VT nat (CInt I32 Unsigned))
-                  (Cst (VT nat (CInt I32 Unsigned)) n10))).
+               (existT ValueI (VT nat (CInt nat eq_refl I32 Unsigned))
+                  (Cst (VT nat (CInt nat eq_refl I32 Unsigned)) n10))).
     set (f:=FC tenv0 v e). 
     set (ft:=FT pt t). 
   

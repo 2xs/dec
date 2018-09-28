@@ -22,19 +22,19 @@ Inductive signedness : Type :=
 Inductive intsize : Type :=
   | I8: intsize
   | I16: intsize
-  | I32: intsize
-(*  | I64: intsize *)        
+  | I32: intsize      
   | IBool: intsize.
 
-Inductive CTyp : Type :=
+Inductive CTyp (t: Type) : Type :=
                      | CVoid
-                     | CInt : intsize -> signedness -> CTyp
-                     | CPtr : CTyp -> CTyp.                                   
+                     | CBool : (t = bool) -> intsize -> signedness -> CTyp t  
+                     | CInt : (t = nat) -> intsize -> signedness -> CTyp t
+                     | CPtr : (t = nat) -> CTyp t -> CTyp t.     
 
 
 (** - The type of value types *)
 
-Inductive VTyp : Type := VT (st: Type) (ct: CTyp).
+Inductive VTyp : Type := VT (st: Type) (ct: CTyp st).
 
 
 (** - Extractors *)
@@ -42,11 +42,6 @@ Inductive VTyp : Type := VT (st: Type) (ct: CTyp).
 Definition sVTyp (t: VTyp) : Type := match t with
                                      | VT st _ => st
                                      end.               
-                                                                   
-Definition cVTyp (t: VTyp) : CTyp := match t with
-                                     | VT _ ct => ct 
-                                     end.                              
-                                                                 
 
 (** DEC state class *)  
 
@@ -59,11 +54,11 @@ Class PState (W: Type) : Type := {
 
 (** - Value type abbreviations *)
 
-Definition Unit : VTyp := VT (unit:Type) CVoid.
+Definition Unit : VTyp := VT (unit:Type) (CVoid unit).
 
-Definition Nat : VTyp := VT (nat:Type) (CInt I32 Unsigned).
+Definition Nat : VTyp := VT (nat:Type) (CInt nat eq_refl I32 Unsigned).
 
-Definition Bool : VTyp := VT (bool:Type) (CInt IBool Unsigned).
+Definition Bool : VTyp := VT (bool:Type) (CBool bool eq_refl IBool Unsigned).
 
 (*************************************************************************)
 

@@ -850,7 +850,7 @@ Lemma ValEnvTRN_lemma (env0 env: valEnv) :
 Defined.
 
 
-Lemma iiiAux (y: Id) (t: Type) (ct: CTyp) (v: t) (e: Exp) (fenv: funEnv)
+Lemma iiiAux (y: Id) (t: Type) (ct: CTyp t) (v: t) (e: Exp) (fenv: funEnv)
               (tenv0: valTC) :
       IdFTyping
         (thicken StaticSemL.Id funFTyp
